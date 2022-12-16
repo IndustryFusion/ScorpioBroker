@@ -3,6 +3,7 @@ package eu.neclab.ngsildbroker.queryhandler.controller;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.ws.rs.GET;
@@ -50,6 +51,7 @@ public class QueryController {
 	 */
 	@Path("/entities/{entityId}")
 	@GET
+	@RolesAllowed({"Factory-Admin", "Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> getEntity(HttpServerRequest request,
 			@QueryParam(value = "attrs") List<String> attrs, @QueryParam(value = "options") List<String> options,
 			@PathParam("entityId") String entityId) {
@@ -67,6 +69,7 @@ public class QueryController {
 	 */
 	@Path("/entities")
 	@GET
+	@RolesAllowed({"Factory-Admin", "Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> queryForEntities(HttpServerRequest request) {
 		return QueryControllerFunctions.queryForEntries(queryService, request, false, defaultLimit, maxLimit, true);
 	}

@@ -33,6 +33,14 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: dbhost
+              value: acid-cluster
+            - name: dbpass
+              valueFrom:
+                secretKeyRef:
+                  name: ngb.acid-cluster.credentials.postgresql.acid.zalan.do
+                  key: password
           ports:
             - containerPort: 9090
               protocol: TCP

@@ -17,11 +17,11 @@
 		<module>Commons</module>
 		<module>EntityManager</module>
 		<module>QueryManager</module>
-		<module>SubscriptionManager</module>
+		<!-- <module>SubscriptionManager</module> -->
 		<!-- <module>AtContextServer</module>  -->
-		<module>RegistryManager</module>
-		<module>RegistrySubscriptionManager</module>
-		<module>HistoryManager</module>
+		<!-- <module>RegistryManager</module>  -->
+		<!-- <module>RegistrySubscriptionManager</module> -->
+		<!-- <module>HistoryManager</module> -->
 		<module>AllInOneRunner</module>
 	</modules>
 </project>

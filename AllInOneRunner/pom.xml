@@ -15,17 +15,17 @@
 			<artifactId>entity-manager</artifactId>
 			<version>3.0.0-SNAPSHOT</version>
 		</dependency>
-		<dependency>
+		<!--<dependency>
 			<groupId>eu.neclab.ngsildbroker</groupId>
 			<artifactId>history-manager</artifactId>
 			<version>3.0.0-SNAPSHOT</version>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>eu.neclab.ngsildbroker</groupId>
 			<artifactId>query-manager</artifactId>
 			<version>3.0.0-SNAPSHOT</version>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>eu.neclab.ngsildbroker</groupId>
 			<artifactId>registry-manager</artifactId>
 			<version>3.0.0-SNAPSHOT</version>
@@ -39,7 +39,7 @@
 			<groupId>eu.neclab.ngsildbroker</groupId>
 			<artifactId>subscription-manager</artifactId>
 			<version>3.0.0-SNAPSHOT</version>
-		</dependency>
+		</dependency> -->
 	</dependencies>
 	<profiles>
 		<profile>
@@ -66,8 +66,8 @@
 						</executions>
 						<configuration>
 							<dockerfile>src/main/resources/dockerfiles/dockerfile-${os}</dockerfile>
-							<repository>scorpiobroker/${project.artifactId}</repository>
-							<tag>${docker-tag}</tag>
+							<repository>ibn40/digitaltwin</repository>
+							<tag>scorpio-${project.artifactId}_${project.version}</tag>
 							<buildArgs>
 								<FILE_BUILD>${project.build.finalName}-runner${nativeext}</FILE_BUILD>
 								<FILE_RUN>scorpio-${project.artifactId}${nativeext}</FILE_RUN>

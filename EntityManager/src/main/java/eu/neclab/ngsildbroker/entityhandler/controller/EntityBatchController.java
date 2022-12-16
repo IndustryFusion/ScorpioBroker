@@ -3,6 +3,7 @@ package eu.neclab.ngsildbroker.entityhandler.controller;
 import java.util.Random;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.ws.rs.POST;
@@ -49,6 +50,7 @@ public class EntityBatchController {
 
 	@POST
 	@Path("/create")
+	@RolesAllowed({"Factory-Admin", "Factory-Writer"})
 	public Uni<RestResponse<Object>> createMultiple(HttpServerRequest request, String payload) {
 		return EntryControllerFunctions.createMultiple(entityService, request, payload, maxCreateBatch,
 				AppConstants.ENTITY_CREATE_PAYLOAD, random).onFailure()
@@ -57,6 +59,7 @@ public class EntityBatchController {
 
 	@POST
 	@Path("/upsert")
+	@RolesAllowed({"Factory-Admin", "Factory-Editor", "Factory-Writer"})
 	public Uni<RestResponse<Object>> upsertMultiple(HttpServerRequest request, String payload,
 			@QueryParam(value = "options") String options) {
 		return EntryControllerFunctions
@@ -67,6 +70,7 @@ public class EntityBatchController {
 
 	@POST
 	@Path("/update")
+	@RolesAllowed({"Factory-Admin", "Factory-Editor", "Factory-Writer"})
 	public Uni<RestResponse<Object>> updateMultiple(HttpServerRequest request, String payload,
 			@QueryParam(value = "options") String options) {
 		return EntryControllerFunctions.updateMultiple(entityService, request, payload, maxUpdateBatch, options,
@@ -75,6 +79,7 @@ public class EntityBatchController {
 
 	@POST
 	@Path("/delete")
+	@RolesAllowed("Factory-Admin")
 	public Uni<RestResponse<Object>> deleteMultiple(HttpServerRequest request, String payload) {
 		return EntryControllerFunctions.deleteMultiple(entityService, request, payload,
 				AppConstants.ENTITY_CREATE_PAYLOAD, random);

@@ -55,3 +55,5 @@ CREATE INDEX i_entity_operationspace ON entity USING GIST (operationspace);
 -- to check if this index will be used by the database optimizer, or if it should be applied only for for certain keys
 -- check https://www.postgresql.org/docs/current/static/datatype-json.html
 CREATE INDEX i_entity_data ON entity USING GIN (data); 
+
+ALTER TABLE public.entity REPLICA IDENTITY FULL;

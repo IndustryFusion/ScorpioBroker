@@ -1,6 +1,7 @@
 package eu.neclab.ngsildbroker.registry.subscriptionmanager.controller;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.ws.rs.DELETE;
@@ -47,18 +48,21 @@ public class RegistrySubscriptionController {
 	}
 
 	@POST
+	@RolesAllowed({"Factory-Admin", "Subscriber"})
 	public Uni<RestResponse<Object>> subscribeRest(HttpServerRequest request, String payload) {
 		return SubscriptionControllerFunctions.subscribeRest(manager, request, payload,
 				AppConstants.CSOURCE_SUBSCRIPTIONS_URL, logger);
 	}
 
 	@GET
+	@RolesAllowed({"Factory-Admin", "Reader"})
 	public Uni<RestResponse<Object>> getAllSubscriptions(HttpServerRequest request) {
 		return SubscriptionControllerFunctions.getAllSubscriptions(manager, request, defaultLimit, maxLimit, logger);
 	}
 
 	@Path("/{id}")
 	@GET
+	@RolesAllowed({"Factory-Admin", "Reader", "Subscriber"})
 	public Uni<RestResponse<Object>> getSubscriptionById(HttpServerRequest request, @PathParam(value = "id") String id,
 			@QueryParam(value = "limit") int limit) {
 		return SubscriptionControllerFunctions.getSubscriptionById(manager, request, id, limit, logger);
@@ -67,12 +71,14 @@ public class RegistrySubscriptionController {
 
 	@Path("/{id}")
 	@DELETE
+	@RolesAllowed({"Factory-Admin", "Subscriber"})
 	public Uni<RestResponse<Object>> deleteSubscription(HttpServerRequest request, @PathParam(value = "id") String id) {
 		return SubscriptionControllerFunctions.deleteSubscription(manager, request, id, logger);
 	}
 
 	@Path("/{id}")
 	@PATCH
+	@RolesAllowed({"Factory-Admin", "Subscriber"})
 	public Uni<RestResponse<Object>> updateSubscription(HttpServerRequest request, @PathParam(value = "id") String id,
 			String payload) {
 		return SubscriptionControllerFunctions.updateSubscription(manager, request, id, payload, logger);

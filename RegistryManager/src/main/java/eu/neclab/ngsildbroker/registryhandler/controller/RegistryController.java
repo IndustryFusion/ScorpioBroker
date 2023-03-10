@@ -1,6 +1,7 @@
 package eu.neclab.ngsildbroker.registryhandler.controller;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.ws.rs.DELETE;
@@ -54,6 +55,7 @@ public class RegistryController {
 	}
 
 	@GET
+	@RolesAllowed({"Factory-Admin", "Reader"})
 	public Uni<RestResponse<Object>> discoverCSource(HttpServerRequest request,
 			@QueryParam(value = "limit") Integer limit, @QueryParam(value = "offset") Integer offset,
 			@QueryParam(value = "qtoken") String qToken, @QueryParam(value = "count") boolean count) {
@@ -61,6 +63,7 @@ public class RegistryController {
 	}
 
 	@POST
+	@RolesAllowed("Factory-Admin")
 	public Uni<RestResponse<Object>> registerCSource(HttpServerRequest request, String payload) {
 		return EntryControllerFunctions.createEntry(csourceService, request, payload,
 				AppConstants.CSOURCE_REG_CREATE_PAYLOAD, AppConstants.CSOURCE_URL, logger);
@@ -68,6 +71,7 @@ public class RegistryController {
 
 	@Path("/{registrationId}")
 	@GET
+	@RolesAllowed({"Factory-Admin", "Reader"})
 	public Uni<RestResponse<Object>> getCSourceById(HttpServerRequest request,
 			@PathParam("registrationId") String registrationId) {
 		logger.debug("get CSource() ::" + registrationId);
@@ -82,6 +86,7 @@ public class RegistryController {
 
 	@Path("/{registrationId}")
 	@PATCH
+	@RolesAllowed("Factory-Admin")
 	public Uni<RestResponse<Object>> updateCSource(HttpServerRequest request,
 			@PathParam("registrationId") String registrationId, String payload) {
 		return EntryControllerFunctions.appendToEntry(csourceService, request, registrationId, payload, "",
@@ -90,6 +95,7 @@ public class RegistryController {
 
 	@Path("/{registrationId}")
 	@DELETE
+	@RolesAllowed("Factory-Admin")
 	public Uni<RestResponse<Object>> deleteCSource(HttpServerRequest request,
 			@PathParam("registrationId") String registrationId) {
 		return EntryControllerFunctions.deleteEntry(csourceService, request, registrationId, logger);

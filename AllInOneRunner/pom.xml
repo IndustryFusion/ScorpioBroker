@@ -66,8 +66,8 @@
 						</executions>
 						<configuration>
 							<dockerfile>src/main/resources/dockerfiles/dockerfile-${os}</dockerfile>
-							<repository>ibn40/digitaltwin</repository>
-							<tag>scorpio-${project.artifactId}_${project.version}</tag>
+							<repository>ibn40/scorpio-${project.artifactId}</repository>
+							<tag>${docker-tag}</tag>
 							<buildArgs>
 								<FILE_BUILD>${project.build.finalName}-runner${nativeext}</FILE_BUILD>
 								<FILE_RUN>scorpio-${project.artifactId}${nativeext}</FILE_RUN>

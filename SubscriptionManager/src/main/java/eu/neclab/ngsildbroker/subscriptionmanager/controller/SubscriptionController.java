@@ -53,14 +53,14 @@ public class SubscriptionController {
 	}
 
 	@GET
-	@RolesAllowed({"Factory-Admin", "Reader"})
+	@RolesAllowed({"Factory-Admin", "Factory-Reader"})
 	public Uni<RestResponse<Object>> getAllSubscriptions(HttpServerRequest request) {
 		return SubscriptionControllerFunctions.getAllSubscriptions(manager, request, defaultLimit, maxLimit, logger);
 	}
 
 	@Path("/{id}")
 	@GET
-	@RolesAllowed({"Factory-Admin, Subscriber, Reader"})
+	@RolesAllowed({"Factory-Admin, Subscriber, Factory-Reader"})
 	public Uni<RestResponse<Object>> getSubscriptionById(HttpServerRequest request, @PathParam(value = "id") String id,
 			@QueryParam(value = "limit") int limit) {
 		return SubscriptionControllerFunctions.getSubscriptionById(manager, request, id, limit, logger);

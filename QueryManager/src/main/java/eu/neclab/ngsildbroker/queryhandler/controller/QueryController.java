@@ -51,7 +51,7 @@ public class QueryController {
 	 */
 	@Path("/entities/{entityId}")
 	@GET
-	@RolesAllowed({"Factory-Admin", "Reader", "Factory-Editor"})
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> getEntity(HttpServerRequest request,
 			@QueryParam(value = "attrs") List<String> attrs, @QueryParam(value = "options") List<String> options,
 			@PathParam("entityId") String entityId) {
@@ -69,7 +69,7 @@ public class QueryController {
 	 */
 	@Path("/entities")
 	@GET
-	@RolesAllowed({"Factory-Admin", "Reader", "Factory-Editor"})
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> queryForEntities(HttpServerRequest request) {
 		return QueryControllerFunctions.queryForEntries(queryService, request, false, defaultLimit, maxLimit, true);
 	}

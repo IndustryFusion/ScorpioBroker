@@ -55,7 +55,7 @@ public class RegistryController {
 	}
 
 	@GET
-	@RolesAllowed({"Factory-Admin", "Reader"})
+	@RolesAllowed({"Factory-Admin", "Factory-Reader"})
 	public Uni<RestResponse<Object>> discoverCSource(HttpServerRequest request,
 			@QueryParam(value = "limit") Integer limit, @QueryParam(value = "offset") Integer offset,
 			@QueryParam(value = "qtoken") String qToken, @QueryParam(value = "count") boolean count) {
@@ -71,7 +71,7 @@ public class RegistryController {
 
 	@Path("/{registrationId}")
 	@GET
-	@RolesAllowed({"Factory-Admin", "Reader"})
+	@RolesAllowed({"Factory-Admin", "Factory-Reader"})
 	public Uni<RestResponse<Object>> getCSourceById(HttpServerRequest request,
 			@PathParam("registrationId") String registrationId) {
 		logger.debug("get CSource() ::" + registrationId);

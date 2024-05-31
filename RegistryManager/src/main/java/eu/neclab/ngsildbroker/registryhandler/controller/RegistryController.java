@@ -12,6 +12,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.QueryParam;
+import jakarta.annotation.security.RolesAllowed;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.resteasy.reactive.RestResponse;
@@ -62,6 +63,7 @@ public class RegistryController {
 	JsonLDService ldService;
 
 	@GET
+	@RolesAllowed({"Factory-Admin", "Factory-Reader"})
 	public Uni<RestResponse<Object>> queryCSource(HttpServerRequest request, @QueryParam("id") String ids,
 			@QueryParam("type") String type, @QueryParam("idPattern") String idPattern,
 			@QueryParam("attrs") String attrs, @QueryParam("q") String q, @QueryParam("csf") String csf,
@@ -134,6 +136,7 @@ public class RegistryController {
 	}
 
 	@POST
+	@RolesAllowed("Factory-Admin")
 	public Uni<RestResponse<Object>> registerCSource(HttpServerRequest request, String payload) {
 		JsonObject jsonObject = new JsonObject(payload);
 		if(jsonObject.containsKey(NGSIConstants.CONTEXT_SOURCE_INFO)){
@@ -156,6 +159,7 @@ public class RegistryController {
 
 	@Path("/{registrationId}")
 	@GET
+	@RolesAllowed({"Factory-Admin", "Factory-Reader"})
 	public Uni<RestResponse<Object>> getCSourceById(HttpServerRequest request,
 			@PathParam("registrationId") String registrationId) {
 		logger.debug("get CSource() ::" + registrationId);
@@ -181,6 +185,7 @@ public class RegistryController {
 
 	@Path("/{registrationId}")
 	@PATCH
+	@RolesAllowed("Factory-Admin")
 	public Uni<RestResponse<Object>> updateCSource(HttpServerRequest request,
 			@PathParam("registrationId") String registrationId, String payload) {
 		return HttpUtils.expandBody(request, payload, AppConstants.CSOURCE_REG_UPDATE_PAYLOAD, ldService).onItem()
@@ -195,6 +200,7 @@ public class RegistryController {
 
 	@Path("/{registrationId}")
 	@DELETE
+	@RolesAllowed("Factory-Admin")
 	public Uni<RestResponse<Object>> deleteCSource(HttpServerRequest request,
 			@PathParam("registrationId") String registrationId) {
 		int acceptHeader = HttpUtils.parseAcceptHeader(request.headers().getAll("Accept"));

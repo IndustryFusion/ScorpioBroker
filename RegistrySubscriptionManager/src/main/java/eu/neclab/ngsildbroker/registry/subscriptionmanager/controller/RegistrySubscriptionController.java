@@ -24,6 +24,7 @@ import eu.neclab.ngsildbroker.commons.tools.MicroServiceUtils;
 import eu.neclab.ngsildbroker.registry.subscriptionmanager.service.RegistrySubscriptionService;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
+import jakarta.annotation.security.RolesAllowed;
 
 @Singleton
 @Path(NGSIConstants.NGSI_LD_REGISTRY_SUB_ENDPOINT)
@@ -49,6 +50,7 @@ public class RegistrySubscriptionController {
 	JsonLDService ldService;
 
 	@POST
+	@RolesAllowed({"Factory-Admin", "Subscriber"})
 	public Uni<RestResponse<Object>> subscribe(HttpServerRequest request, String payload) {
 		return HttpUtils.expandBody(request, payload, AppConstants.SUBSCRIPTION_CREATE_PAYLOAD, ldService).onItem()
 				.transformToUni(tuple -> {
@@ -59,6 +61,7 @@ public class RegistrySubscriptionController {
 	}
 
 	@GET
+	@RolesAllowed({"Factory-Admin", "Factory-Reader"})
 	public Uni<RestResponse<Object>> getAllSubscriptions(HttpServerRequest request, @QueryParam("limit") Integer limit,
 			@QueryParam("offset") int offset, @QueryParam("options") String options) {
 		int acceptHeader = HttpUtils.parseAcceptHeader(request.headers().getAll("Accept"));
@@ -93,6 +96,7 @@ public class RegistrySubscriptionController {
 
 	@Path("/{id}")
 	@GET
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Subscriber"})
 	public Uni<RestResponse<Object>> getSubscriptionById(HttpServerRequest request,
 			@PathParam(value = "id") String subscriptionId, @QueryParam(value = "options") String options) {
 		int acceptHeader = HttpUtils.parseAcceptHeader(request.headers().getAll("Accept"));
@@ -117,6 +121,7 @@ public class RegistrySubscriptionController {
 
 	@Path("/{id}")
 	@DELETE
+	@RolesAllowed({"Factory-Admin", "Subscriber"})
 	public Uni<RestResponse<Object>> deleteSubscription(HttpServerRequest request, @PathParam(value = "id") String id) {
 		try {
 			HttpUtils.validateUri(id);
@@ -131,6 +136,7 @@ public class RegistrySubscriptionController {
 
 	@Path("/{id}")
 	@PATCH
+	@RolesAllowed({"Factory-Admin", "Subscriber"})
 	public Uni<RestResponse<Object>> updateSubscription(HttpServerRequest request, @PathParam(value = "id") String id,
 			String payload) {
 		try {

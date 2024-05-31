@@ -59,6 +59,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple3;
 import io.smallrye.mutiny.tuples.Tuple5;
 import io.vertx.core.http.HttpServerRequest;
+import jakarta.annotation.security.RolesAllowed;
 
 @Singleton
 @Path("/ngsi-ld/v1")
@@ -103,6 +104,7 @@ public class QueryController {
 	 */
 	@Path("/entities/{entityId}")
 	@GET
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> getEntity(HttpServerRequest request, @QueryParam(value = "attrs") String attrs,
 			@QueryParam(value = "options") String options, @QueryParam(value = "lang") String lang,
 			@QueryParam(value = "geometryProperty") String geometryProperty,
@@ -144,6 +146,7 @@ public class QueryController {
 	 */
 	@Path("/entities")
 	@GET
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> query(HttpServerRequest request, @QueryParam("id") String id,
 			@QueryParam("type") String typeQuery, @QueryParam("idPattern") String idPattern,
 			@QueryParam("attrs") String attrs, @QueryParam("q") String qInput, @QueryParam("csf") String csf,
@@ -185,6 +188,7 @@ public class QueryController {
 
 	@Path("/types")
 	@GET
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> getAllTypes(HttpServerRequest request,
 			@QueryParam(value = "details") boolean details, @QueryParam(value = "localOnly") boolean localOnly) {
 
@@ -214,6 +218,7 @@ public class QueryController {
 
 	@Path("/types/{entityType}")
 	@GET
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> getType(HttpServerRequest request, @PathParam("entityType") String type,
 			@QueryParam(value = "localOnly") boolean localOnly) {
 		int acceptHeader = HttpUtils.parseAcceptHeader(request.headers().getAll(HttpHeaders.ACCEPT));
@@ -237,6 +242,7 @@ public class QueryController {
 
 	@Path("/attributes")
 	@GET
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> getAllAttributes(HttpServerRequest request,
 			@QueryParam(value = "details") boolean details, @QueryParam(value = "localOnly") boolean localOnly) {
 
@@ -265,6 +271,7 @@ public class QueryController {
 
 	@Path("/attributes/{attribute}")
 	@GET
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> getAttribute(HttpServerRequest request, @PathParam("attribute") String attribute,
 			@QueryParam(value = "details") boolean details, @QueryParam(value = "localOnly") boolean localOnly) {
 		int acceptHeader = HttpUtils.parseAcceptHeader(request.headers().getAll(HttpHeaders.ACCEPT));

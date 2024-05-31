@@ -9,17 +9,17 @@
 	<artifactId>all-in-one-runner</artifactId>
 	<name>AllInOneRunner</name>
 	<dependencies>
-		<dependency>
+		<!-- <dependency>
 			<groupId>eu.neclab.ngsildbroker</groupId>
 			<artifactId>at-context-server</artifactId>
 			<version>${parent.version}</version>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>eu.neclab.ngsildbroker</groupId>
 			<artifactId>entity-manager</artifactId>
 			<version>${parent.version}</version>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>eu.neclab.ngsildbroker</groupId>
 			<artifactId>history-entity-manager</artifactId>
 			<version>${parent.version}</version>
@@ -28,7 +28,7 @@
 			<groupId>eu.neclab.ngsildbroker</groupId>
 			<artifactId>history-query-manager</artifactId>
 			<version>${parent.version}</version>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>eu.neclab.ngsildbroker</groupId>
 			<artifactId>query-manager</artifactId>
@@ -75,7 +75,7 @@
 						</executions>
 						<configuration>
 							<dockerfile>src/main/resources/dockerfiles/dockerfile-${os}</dockerfile>
-							<repository>scorpiobroker/${project.artifactId}</repository>
+							<repository>ibn40/scorpio-${project.artifactId}</repository>
 							<tag>${docker-tag}</tag>
 							<buildArgs>
 								<FILE_BUILD>${project.build.finalName}-runner${nativeext}</FILE_BUILD>

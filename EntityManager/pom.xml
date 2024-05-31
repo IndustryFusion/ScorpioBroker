@@ -150,7 +150,7 @@
 						</executions>
 						<configuration>
 							<dockerfile>src/main/resources/dockerfiles/dockerfile-${os}</dockerfile>
-							<repository>scorpiobroker/${project.artifactId}</repository>
+							<repository>ibn40/scorpio-${project.artifactId}</repository>
 							<tag>${docker-tag}</tag>
 							<buildArgs>
 								<FILE_BUILD>${project.build.finalName}-runner${nativeext}</FILE_BUILD>

@@ -14,6 +14,7 @@ import jakarta.inject.Singleton;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.QueryParam;
+import jakarta.annotation.security.RolesAllowed;
 import static eu.neclab.ngsildbroker.commons.tools.EntityTools.noConcise;
 import eu.neclab.ngsildbroker.commons.datatypes.results.NGSILDOperationResult;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -60,6 +61,7 @@ public class EntityBatchController {
 
 	@POST
 	@Path("/create")
+	@RolesAllowed({"Factory-Admin", "Factory-Writer"})
 	public Uni<RestResponse<Object>> createMultiple(HttpServerRequest request,
 			List<Map<String, Object>> compactedEntities, @QueryParam("localOnly") boolean localOnly) {
 		List<Uni<Tuple2<String, Object>>> unis = Lists.newArrayList();
@@ -119,6 +121,7 @@ public class EntityBatchController {
 
 	@POST
 	@Path("/upsert")
+	@RolesAllowed({"Factory-Admin", "Factory-Editor", "Factory-Writer"})
 	public Uni<RestResponse<Object>> upsertMultiple(HttpServerRequest request,
 			List<Map<String, Object>> compactedEntities, @QueryParam(value = "options") String options,
 			@QueryParam("localOnly") boolean localOnly) {
@@ -186,6 +189,7 @@ public class EntityBatchController {
 	 */
 	@POST
 	@Path("/update")
+	@RolesAllowed({"Factory-Admin", "Factory-Editor", "Factory-Writer"})
 	public Uni<RestResponse<Object>> appendMultiple(HttpServerRequest request,
 			List<Map<String, Object>> compactedEntities, @QueryParam(value = "options") String options,
 			@QueryParam("localOnly") boolean localOnly) {
@@ -237,6 +241,7 @@ public class EntityBatchController {
 
 	@POST
 	@Path("/delete")
+	@RolesAllowed("Factory-Admin")
 	public Uni<RestResponse<Object>> deleteMultiple(HttpServerRequest request, String entityIdsStr,
 			@QueryParam("localOnly") boolean localOnly) {
 		List<String> entityIds;

@@ -11,6 +11,7 @@ import jakarta.inject.Singleton;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.QueryParam;
+import jakarta.annotation.security.RolesAllowed;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -60,6 +61,7 @@ public class EntityOperationsQueryController {
 
 	@Path("/query")
 	@POST
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> postQuery(HttpServerRequest request, String bodyStr,
 			@QueryParam(value = "limit") Integer limit, @QueryParam(value = "offset") int offset,
 			@QueryParam(value = "options") String options, @QueryParam(value = "count") boolean count,

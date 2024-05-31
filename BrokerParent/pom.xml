@@ -207,6 +207,18 @@
 			<groupId>io.quarkus</groupId>
 			<artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-oidc</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-keycloak-authorization</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.annotation</groupId>
+			<artifactId>jakarta.annotation-api</artifactId>
+		</dependency>		
 	</dependencies>
 	<profiles>
 		<profile>

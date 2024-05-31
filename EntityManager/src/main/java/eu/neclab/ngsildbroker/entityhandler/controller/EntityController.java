@@ -30,6 +30,7 @@ import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.QueryParam;
+import jakarta.annotation.security.RolesAllowed;
 /**
  * 
  * @version 1.0
@@ -58,6 +59,7 @@ public class EntityController {// implements EntityHandlerInterface {
 	 */
 	@Path("/entities")
 	@POST
+	@RolesAllowed({"Factory-Admin", "Factory-Writer"})
 	public Uni<RestResponse<Object>> createEntity(HttpServerRequest req, String bodyStr) {
 		Map<String,Object> body;
 		try {
@@ -88,6 +90,7 @@ public class EntityController {// implements EntityHandlerInterface {
 
 	@PATCH
 	@Path("/entities/{entityId}/attrs")
+	@RolesAllowed({"Factory-Admin", "Factory-Editor", "Factory-Writer"})
 	public Uni<RestResponse<Object>> updateEntity(HttpServerRequest req, @PathParam("entityId") String entityId,
 			String bodyStr) {
 		Map<String,Object> body;
@@ -117,6 +120,7 @@ public class EntityController {// implements EntityHandlerInterface {
 
 	@POST
 	@Path("/entities/{entityId}/attrs")
+	@RolesAllowed({"Factory-Admin", "Factory-Writer"})
 	public Uni<RestResponse<Object>> appendEntity(HttpServerRequest req, @PathParam("entityId") String entityId,
 			String bodyStr, @QueryParam("options") String options) {
 		Map<String,Object> body;
@@ -147,6 +151,7 @@ public class EntityController {// implements EntityHandlerInterface {
 	 */
 	@PATCH
 	@Path("/entities/{entityId}/attrs/{attrId}")
+	@RolesAllowed({"Factory-Admin", "Factory-Editor", "Factory-Writer"})
 	public Uni<RestResponse<Object>> partialUpdateAttribute(HttpServerRequest req,
 			@PathParam("entityId") String entityId, @PathParam("attrId") String attrib, String bodyStr) {
 		Map<String,Object> body;
@@ -188,6 +193,7 @@ public class EntityController {// implements EntityHandlerInterface {
 
 	@DELETE
 	@Path("/entities/{entityId}/attrs/{attrId}")
+	@RolesAllowed("Factory-Admin")
 	public Uni<RestResponse<Object>> deleteAttribute(HttpServerRequest request, @PathParam("entityId") String entityId,
 			@PathParam("attrId") String attrId, @QueryParam("datasetId") String datasetId,
 			@QueryParam("deleteAll") boolean deleteAll) {
@@ -218,6 +224,7 @@ public class EntityController {// implements EntityHandlerInterface {
 	 */
 	@DELETE
 	@Path("/entities/{entityId}")
+	@RolesAllowed("Factory-Admin")
 	public Uni<RestResponse<Object>> deleteEntity(HttpServerRequest request, @PathParam("entityId") String entityId) {
 		try {
 			HttpUtils.validateUri(entityId);
@@ -234,6 +241,7 @@ public class EntityController {// implements EntityHandlerInterface {
 	
 	@PATCH
 	@Path("/entities/{entityId}")
+	@RolesAllowed({"Factory-Admin", "Factory-Editor", "Factory-Writer"})
 	public Uni<RestResponse<Object>> mergePatch(HttpServerRequest request, @PathParam("entityId") String entityId,
 			String bodyStr) {
 		Map<String,Object> body;
@@ -259,6 +267,7 @@ public class EntityController {// implements EntityHandlerInterface {
 
 	@Path("/entities/{entityId}")
 	@PUT
+	@RolesAllowed({"Factory-Admin", "Factory-Editor", "Factory-Writer"})
 	public Uni<RestResponse<Object>> replaceEntity(@PathParam("entityId") String entityId, HttpServerRequest request,
 			String bodyStr) {
 		logger.debug("replacing entity");
@@ -289,6 +298,7 @@ public class EntityController {// implements EntityHandlerInterface {
 
 	@Path("/entities/{entityId}/attrs/{attrId}")
 	@PUT
+	@RolesAllowed({"Factory-Admin", "Factory-Editor", "Factory-Writer"})
 	public Uni<RestResponse<Object>> replaceAttribute(@PathParam("attrId") String attrId,
 			@PathParam("entityId") String entityId, HttpServerRequest request, String bodyStr) {
 		logger.debug("replacing Attrs");

@@ -34,6 +34,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import jakarta.annotation.security.RolesAllowed;
 
 @Path("/ngsi-ld/v1/subscriptions")
 public class SubscriptionController {
@@ -68,6 +69,7 @@ public class SubscriptionController {
 
 	@SuppressWarnings("unchecked")
 	@POST
+	@RolesAllowed({"Factory-Admin", "Subscriber"})
 	public Uni<RestResponse<Object>> subscribe(HttpServerRequest request, Map<String, Object> map) {
 		try {
 			if (!map.containsKey(NGSIConstants.JSONLD_CONTEXT)) {
@@ -109,6 +111,7 @@ public class SubscriptionController {
 	}
 
 	@GET
+	@RolesAllowed({"Factory-Admin", "Factory-Reader"})
 	public Uni<RestResponse<Object>> getAllSubscriptions(HttpServerRequest request, @QueryParam("limit") Integer limit,
 			@QueryParam("offset") int offset, @QueryParam("options") String options) {
 		int acceptHeader = HttpUtils.parseAcceptHeader(request.headers().getAll("Accept"));
@@ -142,6 +145,7 @@ public class SubscriptionController {
 
 	@Path("/{id}")
 	@GET
+	@RolesAllowed({"Factory-Admin, Subscriber, Factory-Reader"})
 	public Uni<RestResponse<Object>> getSubscriptionById(HttpServerRequest request,
 			@PathParam(value = "id") String subscriptionId, @QueryParam(value = "options") String options) {
 		int acceptHeader = HttpUtils.parseAcceptHeader(request.headers().getAll("Accept"));
@@ -165,6 +169,7 @@ public class SubscriptionController {
 
 	@Path("/{id}")
 	@DELETE
+	@RolesAllowed({"Factory-Admin", "Subscriber"})
 	public Uni<RestResponse<Object>> deleteSubscription(HttpServerRequest request, @PathParam(value = "id") String id) {
 		try {
 			HttpUtils.validateUri(id);
@@ -179,6 +184,7 @@ public class SubscriptionController {
 
 	@Path("/{id}")
 	@PATCH
+	@RolesAllowed({"Factory-Admin", "Subscriber"})
 	public Uni<RestResponse<Object>> updateSubscription(HttpServerRequest request, @PathParam(value = "id") String id,
 			Map<String, Object> map) {
 		try {

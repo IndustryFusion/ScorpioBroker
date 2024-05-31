@@ -9,17 +9,17 @@
 	<artifactId>all-in-one-runner</artifactId>
 	<name>AllInOneRunner</name>
 	<dependencies>
-		<dependency>
+		<!-- <dependency>
 			<groupId>eu.neclab.ngsildbroker</groupId>
 			<artifactId>at-context-server</artifactId>
 			<version>${project.parent.version}</version>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>eu.neclab.ngsildbroker</groupId>
 			<artifactId>entity-manager</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>eu.neclab.ngsildbroker</groupId>
 			<artifactId>history-entity-manager</artifactId>
 			<version>${project.parent.version}</version>
@@ -28,7 +28,7 @@
 			<groupId>eu.neclab.ngsildbroker</groupId>
 			<artifactId>history-query-manager</artifactId>
 			<version>${project.parent.version}</version>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>eu.neclab.ngsildbroker</groupId>
 			<artifactId>query-manager</artifactId>
@@ -86,7 +86,7 @@
 			</activation>
 			<properties>
 				<quarkus.container-image.build>true</quarkus.container-image.build>
-				<quarkus.container-image.name>${project.artifactId}</quarkus.container-image.name>
+				<quarkus.container-image.name>ibn40/scorpio-${project.artifactId}</quarkus.container-image.name>
 				<quarkus.container-image.tag>${docker-tag}</quarkus.container-image.tag>
 				<quarkus.container-image.registry>scorpiobroker</quarkus.container-image.registry>
 				<quarkus.container-image.group></quarkus.container-image.group>

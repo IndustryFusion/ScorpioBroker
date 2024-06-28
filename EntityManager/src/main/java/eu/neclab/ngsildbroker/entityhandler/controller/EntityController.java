@@ -71,7 +71,7 @@ public class EntityController {// implements EntityHandlerInterface {
 		return HttpUtils.expandBody(req, body, AppConstants.ENTITY_CREATE_PAYLOAD, ldService).onItem()
 				.transformToUni(tuple -> {
 					logger.debug("creating entity");
-					return entityService.createEntity(HttpUtils.getTenant(req), tuple.getItem2(), tuple.getItem1())
+					return entityService.createEntity(HttpUtils.getTenant(req), tuple.getItem2(), tuple.getItem1(),req.headers())
 							.onItem().transform(opResult -> {
 								logger.debug("Done creating entity");
 								return HttpUtils.generateCreateResult(opResult, AppConstants.ENTITES_URL);
@@ -105,7 +105,7 @@ public class EntityController {// implements EntityHandlerInterface {
 				.transformToUni(tuple -> {
 					logger.debug("patch attrs");
 					return entityService
-							.updateEntity(HttpUtils.getTenant(req), entityId, tuple.getItem2(), tuple.getItem1())
+							.updateEntity(HttpUtils.getTenant(req), entityId, tuple.getItem2(), tuple.getItem1(),req.headers())
 							.onItem().transform(HttpUtils::generateUpdateResultResponse);
 				}).onFailure().recoverWithItem(HttpUtils::handleControllerExceptions);
 	}
@@ -136,7 +136,7 @@ public class EntityController {// implements EntityHandlerInterface {
 				.transformToUni(tuple -> {
 					logger.debug("post attrs");
 					return entityService.appendToEntity(HttpUtils.getTenant(req), entityId, tuple.getItem2(),
-							noOverwrite, tuple.getItem1()).onItem().transform(HttpUtils::generateUpdateResultResponse);
+							noOverwrite, tuple.getItem1(),req.headers()).onItem().transform(HttpUtils::generateUpdateResultResponse);
 				}).onFailure().recoverWithItem(HttpUtils::handleControllerExceptions);
 
 	}
@@ -168,7 +168,7 @@ public class EntityController {// implements EntityHandlerInterface {
 					String expAttrib = tuple.getItem1().expandIri(attrib, false, true, null, null);
 					logger.debug("update entry :: started");
 					return entityService.partialUpdateAttribute(HttpUtils.getTenant(req), entityId, expAttrib,
-							tuple.getItem2(), tuple.getItem1()).onItem().transform(updateResult -> {
+							tuple.getItem2(), tuple.getItem1(),req.headers()).onItem().transform(updateResult -> {
 								logger.trace("update entry :: completed");
 								return HttpUtils.generateUpdateResultResponse(updateResult);
 							});
@@ -206,7 +206,7 @@ public class EntityController {// implements EntityHandlerInterface {
 			String finalAttrId = context.expandIri(attrId, false, true, null, null);
 			logger.trace("delete attribute :: started");
 			return entityService
-					.deleteAttribute(HttpUtils.getTenant(request), entityId, finalAttrId, datasetId, deleteAll, context)
+					.deleteAttribute(HttpUtils.getTenant(request), entityId, finalAttrId, datasetId, deleteAll, context,request.headers())
 					.onItem().transform(opResult -> {
 						logger.trace("delete attribute :: completed");
 						return HttpUtils.generateDeleteResult(opResult);
@@ -232,7 +232,7 @@ public class EntityController {// implements EntityHandlerInterface {
 			return Uni.createFrom().item(HttpUtils.handleControllerExceptions(e));
 		}
 		return ldService.parse(HttpUtils.getAtContext(request)).onItem().transformToUni(context -> {
-			return entityService.deleteEntity(HttpUtils.getTenant(request), entityId, context).onItem()
+			return entityService.deleteEntity(HttpUtils.getTenant(request), entityId, context,request.headers()).onItem()
 					.transform(HttpUtils::generateDeleteResult);
 		}).onFailure().recoverWithItem(HttpUtils::handleControllerExceptions);
 
@@ -259,7 +259,7 @@ public class EntityController {// implements EntityHandlerInterface {
 		return HttpUtils.expandBody(request, body, AppConstants.MERGE_PATCH_REQUEST, ldService).onItem()
 				.transformToUni(tuple -> {
 					return entityService
-							.mergePatch(HttpUtils.getTenant(request), entityId, tuple.getItem2(), tuple.getItem1())
+							.mergePatch(HttpUtils.getTenant(request), entityId, tuple.getItem2(), tuple.getItem1(),request.headers())
 							.onItem().transform(HttpUtils::generateUpdateResultResponse);
 				}).onFailure().recoverWithItem(HttpUtils::handleControllerExceptions);
 
@@ -287,7 +287,7 @@ public class EntityController {// implements EntityHandlerInterface {
 		return HttpUtils.expandBody(request, body, AppConstants.REPLACE_ENTITY_PAYLOAD, ldService).onItem()
 				.transformToUni(tuple -> {
 
-					return entityService.replaceEntity(HttpUtils.getTenant(request), tuple.getItem2(), tuple.getItem1())
+					return entityService.replaceEntity(HttpUtils.getTenant(request), tuple.getItem2(), tuple.getItem1(),request.headers())
 							.onItem().transform(opResult -> {
 
 								logger.debug("Done replacing entity");
@@ -314,7 +314,7 @@ public class EntityController {// implements EntityHandlerInterface {
 				.transformToUni(tuple -> {
 					String finalAttrId = tuple.getItem1().expandIri(attrId, false, true, null, null);
 					return entityService.replaceAttribute(HttpUtils.getTenant(request), tuple.getItem2(),
-							tuple.getItem1(), entityId, finalAttrId).onItem().transform(opResult -> {
+							tuple.getItem1(), entityId, finalAttrId,request.headers()).onItem().transform(opResult -> {
 								logger.debug("Done replacing attribute");
 								return HttpUtils.generateUpdateResultResponse(opResult);
 							}).onFailure().recoverWithItem(HttpUtils::handleControllerExceptions);

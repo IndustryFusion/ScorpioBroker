@@ -257,6 +257,7 @@ public class EntityBatchController {
 	}
 	@POST
 	@Path("/merge")
+	@RolesAllowed({"Factory-Admin", "Factory-Editor", "Factory-Writer"})
 	public Uni<RestResponse<Object>> mergeMultiple(HttpServerRequest request,
 													List<Map<String, Object>> compactedEntities, @QueryParam(value = "options") String options,
 													@QueryParam("localOnly") boolean localOnly) {

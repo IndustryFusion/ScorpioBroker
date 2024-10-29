@@ -24,9 +24,9 @@ To get you quickly started you can just choose on of the provided docker-compose
  - [java based all-in-one runner](https://raw.githubusercontent.com/ScorpioBroker/ScorpioBroker/development-quarkus/compose-files/docker-compose-java-aaio-kafka.yml)
  - [java based all-in-one runner without kafka integration, no scaling but less resource requirements](https://raw.githubusercontent.com/ScorpioBroker/ScorpioBroker/development-quarkus/compose-files/docker-compose-java-aaio.yml)
  - [java based distributed microservices](https://raw.githubusercontent.com/ScorpioBroker/ScorpioBroker/development-quarkus/compose-files/docker-compose-java-dist-kafka.yml)
- - [ubuntu native all-in-one runner](https://raw.githubusercontent.com/ScorpioBroker/ScorpioBroker/development-quarkus/compose-files/docker-compose-ubuntu-aaio-kafka.yml)
- - [ubuntu native all-in-one runner without kafka integration, no scaling but less resource requirements](https://raw.githubusercontent.com/ScorpioBroker/ScorpioBroker/development-quarkus/compose-files/docker-compose-ubuntu-aaio.yml)
- - [ubuntu native distributed microservices](https://raw.githubusercontent.com/ScorpioBroker/ScorpioBroker/development-quarkus/compose-files/docker-compose-ubuntu-dist-kafka.yml)
+ - [Linux AMD 64 native all-in-one runner](https://raw.githubusercontent.com/ScorpioBroker/ScorpioBroker/development-quarkus/compose-files/docker-compose-linux-amd64-aaio-kafka.yml)
+ - [Linux AMD 64 native all-in-one runner without kafka integration, no scaling but less resource requirements](https://raw.githubusercontent.com/ScorpioBroker/ScorpioBroker/development-quarkus/compose-files/docker-compose-linux-amd64-aaio.yml)
+ - [Linux AMD 64 native distributed microservices](https://raw.githubusercontent.com/ScorpioBroker/ScorpioBroker/development-quarkus/compose-files/docker-compose-linux-amd64-dist-kafka.yml)
 
 
 If you have a local PostgreSQL (and Kafka) setup you can also download pre builds for Ubuntu, Windows and MacOS from the [releases](https://github.com/ScorpioBroker/ScorpioBroker/releases)

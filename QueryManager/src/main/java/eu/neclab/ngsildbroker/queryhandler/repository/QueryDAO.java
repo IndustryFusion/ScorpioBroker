@@ -1083,12 +1083,175 @@ public class QueryDAO {
 		});
 	}
 
+	private void generateJoinQuery(StringBuilder query, StringBuilder followUp, int joinLevel) {
+		query.append(", ");
+		followUp.append(", ");
+		int counter;
+		for (counter = 0; counter < joinLevel; counter++) {
+			query.append('B');
+			query.append(counter + 1);
+			query.append(" AS (SELECT ");
+			query.append('D');
+			query.append(counter);
+			query.append(".ID AS ID, X.VALUE AS VALUE FROM D");
+			query.append(counter);
+			query.append(", JSONB_EACH(D");
+			query.append(counter);
+			query.append(".ENTITY) AS X WHERE JSONB_TYPEOF(X.VALUE) = 'array'), ");
+			query.append('C');
+			query.append(counter + 1);
+			query.append(" AS (SELECT DISTINCT (CASE WHEN Y #>> '{");
+			query.append(NGSIConstants.JSON_LD_TYPE);
+			query.append(",0}' = '");
+			query.append(NGSIConstants.NGSI_LD_RELATIONSHIP);
+			query.append("' THEN Z ->> '");
+			query.append(NGSIConstants.JSON_LD_ID);
+			query.append("' WHEN Y #>> '{");
+			query.append(NGSIConstants.JSON_LD_TYPE);
+			query.append(",0}' = '");
+			query.append(NGSIConstants.NGSI_LD_LISTRELATIONSHIP);
+			query.append("' THEN Z #>> '{");
+			query.append(NGSIConstants.NGSI_LD_HAS_OBJECT);
+			query.append(",0,");
+			query.append(NGSIConstants.JSON_LD_ID);
+			query.append("}' ELSE NULL END) AS LINK, ARRAY_AGG(E_TYPES ->> '");
+			query.append(NGSIConstants.JSON_LD_ID);
+			query.append("') AS ET FROM B");
+			query.append(counter + 1);
+			query.append(", JSONB_ARRAY_ELEMENTS(B");
+			query.append(counter + 1);
+			query.append(".VALUE) AS Y, JSONB_ARRAY_ELEMENTS(CASE WHEN Y #>> '{");
+			query.append(NGSIConstants.JSON_LD_TYPE);
+			query.append(",0}' = '");
+			query.append(NGSIConstants.NGSI_LD_RELATIONSHIP);
+			query.append("' THEN Y #> '{");
+			query.append(NGSIConstants.NGSI_LD_HAS_OBJECT);
+			query.append("}' WHEN Y #>> '{");
+			query.append(NGSIConstants.JSON_LD_TYPE);
+			query.append(",0}' = '");
+			query.append(NGSIConstants.NGSI_LD_LISTRELATIONSHIP);
+			query.append("' THEN Y #> '{");
+			query.append(NGSIConstants.NGSI_LD_HAS_OBJECT_LIST);
+			query.append(",0,");
+			query.append(NGSIConstants.JSON_LD_LIST);
+			query.append("}' ELSE null END) AS Z, JSONB_ARRAY_ELEMENTS(Y -> '");
+			query.append(NGSIConstants.NGSI_LD_OBJECT_TYPE);
+			query.append("') AS E_TYPES WHERE Y #>> '{");
+			query.append(NGSIConstants.JSON_LD_TYPE);
+			query.append(",0}' = ANY('{");
+			query.append(NGSIConstants.NGSI_LD_RELATIONSHIP);
+			query.append(",");
+			query.append(NGSIConstants.NGSI_LD_LISTRELATIONSHIP);
+			query.append("}') AND Y ? '");
+			query.append(NGSIConstants.NGSI_LD_OBJECT_TYPE);
+			query.append("' GROUP BY y.value, z.value), ");
+	
+			query.append('D');
+			query.append(counter + 1);
+			query.append(
+					" as (SELECT E.ID as id, E.ENTITY as entity, FALSE as parent, E.E_TYPES as E_TYPES, null::jsonb");
+			query.append(" from C");
+			query.append(counter + 1);
+			query.append(" LEFT JOIN ENTITY as E on C");
+			query.append(counter + 1);
+			query.append(".link = E.ID WHERE C");
+			query.append(counter + 1);
+			query.append(".ET && E.E_TYPES), ");
+	
+			followUp.append('B');
+			followUp.append(counter + 1);
+			followUp.append(" AS (SELECT ");
+			followUp.append('D');
+			followUp.append(counter);
+			followUp.append(".ID AS ID, X.VALUE AS VALUE FROM D");
+			followUp.append(counter);
+			followUp.append(", JSONB_EACH(D");
+			followUp.append(counter);
+			followUp.append(".ENTITY) AS X WHERE JSONB_TYPEOF(X.VALUE) = ''array''), ");
+			followUp.append('C');
+			followUp.append(counter + 1);
+			followUp.append(" AS (SELECT DISTINCT (CASE WHEN Y #>> ''{");
+			followUp.append(NGSIConstants.JSON_LD_TYPE);
+			followUp.append(",0}'' = ''");
+			followUp.append(NGSIConstants.NGSI_LD_RELATIONSHIP);
+			followUp.append("'' THEN Z ->> ''");
+			followUp.append(NGSIConstants.JSON_LD_ID);
+			followUp.append("'' WHEN Y #>> ''{");
+			followUp.append(NGSIConstants.JSON_LD_TYPE);
+			followUp.append(",0}'' = ''");
+			followUp.append(NGSIConstants.NGSI_LD_LISTRELATIONSHIP);
+			followUp.append("'' THEN Z #>> ''{");
+			followUp.append(NGSIConstants.NGSI_LD_HAS_OBJECT);
+			followUp.append(",0,");
+			followUp.append(NGSIConstants.JSON_LD_ID);
+			followUp.append("}'' ELSE NULL END) AS LINK, ARRAY_AGG(E_TYPES ->> ''");
+			followUp.append(NGSIConstants.JSON_LD_ID);
+			followUp.append("'') AS ET FROM B");
+			followUp.append(counter + 1);
+			followUp.append(", JSONB_ARRAY_ELEMENTS(B");
+			followUp.append(counter + 1);
+			followUp.append(".VALUE) AS Y, JSONB_ARRAY_ELEMENTS(CASE WHEN Y #>> ''{");
+			followUp.append(NGSIConstants.JSON_LD_TYPE);
+			followUp.append(",0}'' = ''");
+			followUp.append(NGSIConstants.NGSI_LD_RELATIONSHIP);
+			followUp.append("'' THEN Y #> ''{");
+			followUp.append(NGSIConstants.NGSI_LD_HAS_OBJECT);
+			followUp.append("}'' WHEN Y #>> ''{");
+			followUp.append(NGSIConstants.JSON_LD_TYPE);
+			followUp.append(",0}'' = ''");
+			followUp.append(NGSIConstants.NGSI_LD_LISTRELATIONSHIP);
+			followUp.append("'' THEN Y #> ''{");
+			followUp.append(NGSIConstants.NGSI_LD_HAS_OBJECT_LIST);
+			followUp.append(",0,");
+			followUp.append(NGSIConstants.JSON_LD_LIST);
+			followUp.append("}'' ELSE null END) AS Z, JSONB_ARRAY_ELEMENTS(Y -> ''");
+			followUp.append(NGSIConstants.NGSI_LD_OBJECT_TYPE);
+			followUp.append("'') AS E_TYPES WHERE Y #>> ''{");
+			followUp.append(NGSIConstants.JSON_LD_TYPE);
+			followUp.append(",0}'' = ANY(''{");
+			followUp.append(NGSIConstants.NGSI_LD_RELATIONSHIP);
+			followUp.append(",");
+			followUp.append(NGSIConstants.NGSI_LD_LISTRELATIONSHIP);
+			followUp.append("}'') AND Y ? ''");
+			followUp.append(NGSIConstants.NGSI_LD_OBJECT_TYPE);
+			followUp.append("'' GROUP BY y.value, z.value), ");
+	
+			followUp.append('D');
+			followUp.append(counter + 1);
+			followUp.append(" as (SELECT E.ID as id, E.ENTITY as entity, FALSE as parent, E.E_TYPES as E_TYPES, null");
+			followUp.append(" from C");
+			followUp.append(counter + 1);
+			followUp.append(" LEFT JOIN ENTITY as E on C");
+			followUp.append(counter + 1);
+			followUp.append(".link = E.ID WHERE C");
+			followUp.append(counter + 1);
+			followUp.append(".ET && E.E_TYPES), ");
+		}
+	
+		query.append(" JOINENTITIES AS (");
+		followUp.append(" JOINENTITIES AS (");
+		for (int i = 1; i <= joinLevel; i++) {
+			query.append("SELECT * FROM D");
+			query.append(i);
+			query.append(" UNION ALL ");
+	
+			followUp.append("SELECT * FROM D");
+			followUp.append(i);
+			followUp.append(" UNION ALL ");
+		}
+		query.setLength(query.length() - " UNION ALL ".length());
+		query.append(")");
+		followUp.setLength(followUp.length() - " UNION ALL ".length());
+		followUp.append(")");
+	
+	}
+
 	public Uni<Tuple2<EntityCache, EntityMap>> createEntityMapAndFillEntityCache(String tenant,
 			List<Tuple3<String[], TypeQueryTerm, String>> idsAndTypeAndIdPattern, AttrsQueryTerm attrsQuery,
 			QQueryTerm qQuery, GeoQueryTerm geoQuery, ScopeQueryTerm scopeQuery, Context context, int limit, int offset,
 			DataSetIdTerm dataSetIdTerm, String join, int joinLevel, String qToken, PickTerm pickTerm,
 			OmitTerm omitTerm, String queryChecksum, boolean splitEntities,
-			boolean regEmptyOrNoRegEntryAndNoLinkedQuery, boolean noRootLevelRegEntryAndLinkedQuery) {
+			boolean regEmptyOrNoRegEntryAndNoLinkedQuery, boolean noRootLevelRegEntryAndLinkedQuery, String typePattern) {
 
 		return clientManager.getClient(tenant, false).onItem().transformToUni(client -> {
 			StringBuilder query = new StringBuilder();
@@ -1105,6 +1268,13 @@ public class QueryDAO {
 			query.append("WITH a as (SELECT ID");
 
 			query.append(" FROM ENTITY WHERE ");
+			if(typePattern != null) {
+				query.append("EXISTS (SELECT TRUE FROM UNNEST(E_TYPES) AS E_TYPE WHERE E_TYPE ~ $");
+				query.append(dollar);
+				dollar++;
+				tuple.addString(typePattern);
+				query.append(") AND ");
+			}
 			boolean sqlAdded = false;
 			if (idsAndTypeAndIdPattern != null) {
 				sqlAdded = true;
@@ -1431,169 +1601,6 @@ public class QueryDAO {
 		}
 		resultEntityMap.getExpiresAt(System.currentTimeMillis() + 300000);
 		return Tuple2.of(resultEntities, resultEntityMap);
-	}
-
-	private void generateJoinQuery(StringBuilder query, StringBuilder followUp, int joinLevel) {
-		query.append(", ");
-		followUp.append(", ");
-		int counter;
-		for (counter = 0; counter < joinLevel; counter++) {
-			query.append('B');
-			query.append(counter + 1);
-			query.append(" AS (SELECT ");
-			query.append('D');
-			query.append(counter);
-			query.append(".ID AS ID, X.VALUE AS VALUE FROM D");
-			query.append(counter);
-			query.append(", JSONB_EACH(D");
-			query.append(counter);
-			query.append(".ENTITY) AS X WHERE JSONB_TYPEOF(X.VALUE) = 'array'), ");
-			query.append('C');
-			query.append(counter + 1);
-			query.append(" AS (SELECT DISTINCT (CASE WHEN Y #>> '{");
-			query.append(NGSIConstants.JSON_LD_TYPE);
-			query.append(",0}' = '");
-			query.append(NGSIConstants.NGSI_LD_RELATIONSHIP);
-			query.append("' THEN Z ->> '");
-			query.append(NGSIConstants.JSON_LD_ID);
-			query.append("' WHEN Y #>> '{");
-			query.append(NGSIConstants.JSON_LD_TYPE);
-			query.append(",0}' = '");
-			query.append(NGSIConstants.NGSI_LD_LISTRELATIONSHIP);
-			query.append("' THEN Z #>> '{");
-			query.append(NGSIConstants.NGSI_LD_HAS_OBJECT);
-			query.append(",0,");
-			query.append(NGSIConstants.JSON_LD_ID);
-			query.append("}' ELSE NULL END) AS LINK, ARRAY_AGG(E_TYPES ->> '");
-			query.append(NGSIConstants.JSON_LD_ID);
-			query.append("') AS ET FROM B");
-			query.append(counter + 1);
-			query.append(", JSONB_ARRAY_ELEMENTS(B");
-			query.append(counter + 1);
-			query.append(".VALUE) AS Y, JSONB_ARRAY_ELEMENTS(CASE WHEN Y #>> '{");
-			query.append(NGSIConstants.JSON_LD_TYPE);
-			query.append(",0}' = '");
-			query.append(NGSIConstants.NGSI_LD_RELATIONSHIP);
-			query.append("' THEN Y #> '{");
-			query.append(NGSIConstants.NGSI_LD_HAS_OBJECT);
-			query.append("}' WHEN Y #>> '{");
-			query.append(NGSIConstants.JSON_LD_TYPE);
-			query.append(",0}' = '");
-			query.append(NGSIConstants.NGSI_LD_LISTRELATIONSHIP);
-			query.append("' THEN Y #> '{");
-			query.append(NGSIConstants.NGSI_LD_HAS_OBJECT_LIST);
-			query.append(",0,");
-			query.append(NGSIConstants.JSON_LD_LIST);
-			query.append("}' ELSE null END) AS Z, JSONB_ARRAY_ELEMENTS(Y -> '");
-			query.append(NGSIConstants.NGSI_LD_OBJECT_TYPE);
-			query.append("') AS E_TYPES WHERE Y #>> '{");
-			query.append(NGSIConstants.JSON_LD_TYPE);
-			query.append(",0}' = ANY('{");
-			query.append(NGSIConstants.NGSI_LD_RELATIONSHIP);
-			query.append(",");
-			query.append(NGSIConstants.NGSI_LD_LISTRELATIONSHIP);
-			query.append("}') AND Y ? '");
-			query.append(NGSIConstants.NGSI_LD_OBJECT_TYPE);
-			query.append("' GROUP BY y.value, z.value), ");
-
-			query.append('D');
-			query.append(counter + 1);
-			query.append(
-					" as (SELECT E.ID as id, E.ENTITY as entity, FALSE as parent, E.E_TYPES as E_TYPES, null::jsonb");
-			query.append(" from C");
-			query.append(counter + 1);
-			query.append(" LEFT JOIN ENTITY as E on C");
-			query.append(counter + 1);
-			query.append(".link = E.ID WHERE C");
-			query.append(counter + 1);
-			query.append(".ET && E.E_TYPES), ");
-
-			followUp.append('B');
-			followUp.append(counter + 1);
-			followUp.append(" AS (SELECT ");
-			followUp.append('D');
-			followUp.append(counter);
-			followUp.append(".ID AS ID, X.VALUE AS VALUE FROM D");
-			followUp.append(counter);
-			followUp.append(", JSONB_EACH(D");
-			followUp.append(counter);
-			followUp.append(".ENTITY) AS X WHERE JSONB_TYPEOF(X.VALUE) = ''array''), ");
-			followUp.append('C');
-			followUp.append(counter + 1);
-			followUp.append(" AS (SELECT DISTINCT (CASE WHEN Y #>> ''{");
-			followUp.append(NGSIConstants.JSON_LD_TYPE);
-			followUp.append(",0}'' = ''");
-			followUp.append(NGSIConstants.NGSI_LD_RELATIONSHIP);
-			followUp.append("'' THEN Z ->> ''");
-			followUp.append(NGSIConstants.JSON_LD_ID);
-			followUp.append("'' WHEN Y #>> ''{");
-			followUp.append(NGSIConstants.JSON_LD_TYPE);
-			followUp.append(",0}'' = ''");
-			followUp.append(NGSIConstants.NGSI_LD_LISTRELATIONSHIP);
-			followUp.append("'' THEN Z #>> ''{");
-			followUp.append(NGSIConstants.NGSI_LD_HAS_OBJECT);
-			followUp.append(",0,");
-			followUp.append(NGSIConstants.JSON_LD_ID);
-			followUp.append("}'' ELSE NULL END) AS LINK, ARRAY_AGG(E_TYPES ->> ''");
-			followUp.append(NGSIConstants.JSON_LD_ID);
-			followUp.append("'') AS ET FROM B");
-			followUp.append(counter + 1);
-			followUp.append(", JSONB_ARRAY_ELEMENTS(B");
-			followUp.append(counter + 1);
-			followUp.append(".VALUE) AS Y, JSONB_ARRAY_ELEMENTS(CASE WHEN Y #>> ''{");
-			followUp.append(NGSIConstants.JSON_LD_TYPE);
-			followUp.append(",0}'' = ''");
-			followUp.append(NGSIConstants.NGSI_LD_RELATIONSHIP);
-			followUp.append("'' THEN Y #> ''{");
-			followUp.append(NGSIConstants.NGSI_LD_HAS_OBJECT);
-			followUp.append("}'' WHEN Y #>> ''{");
-			followUp.append(NGSIConstants.JSON_LD_TYPE);
-			followUp.append(",0}'' = ''");
-			followUp.append(NGSIConstants.NGSI_LD_LISTRELATIONSHIP);
-			followUp.append("'' THEN Y #> ''{");
-			followUp.append(NGSIConstants.NGSI_LD_HAS_OBJECT_LIST);
-			followUp.append(",0,");
-			followUp.append(NGSIConstants.JSON_LD_LIST);
-			followUp.append("}'' ELSE null END) AS Z, JSONB_ARRAY_ELEMENTS(Y -> ''");
-			followUp.append(NGSIConstants.NGSI_LD_OBJECT_TYPE);
-			followUp.append("'') AS E_TYPES WHERE Y #>> ''{");
-			followUp.append(NGSIConstants.JSON_LD_TYPE);
-			followUp.append(",0}'' = ANY(''{");
-			followUp.append(NGSIConstants.NGSI_LD_RELATIONSHIP);
-			followUp.append(",");
-			followUp.append(NGSIConstants.NGSI_LD_LISTRELATIONSHIP);
-			followUp.append("}'') AND Y ? ''");
-			followUp.append(NGSIConstants.NGSI_LD_OBJECT_TYPE);
-			followUp.append("'' GROUP BY y.value, z.value), ");
-
-			followUp.append('D');
-			followUp.append(counter + 1);
-			followUp.append(" as (SELECT E.ID as id, E.ENTITY as entity, FALSE as parent, E.E_TYPES as E_TYPES, null");
-			followUp.append(" from C");
-			followUp.append(counter + 1);
-			followUp.append(" LEFT JOIN ENTITY as E on C");
-			followUp.append(counter + 1);
-			followUp.append(".link = E.ID WHERE C");
-			followUp.append(counter + 1);
-			followUp.append(".ET && E.E_TYPES), ");
-		}
-
-		query.append(" JOINENTITIES AS (");
-		followUp.append(" JOINENTITIES AS (");
-		for (int i = 1; i <= joinLevel; i++) {
-			query.append("SELECT * FROM D");
-			query.append(i);
-			query.append(" UNION ALL ");
-
-			followUp.append("SELECT * FROM D");
-			followUp.append(i);
-			followUp.append(" UNION ALL ");
-		}
-		query.setLength(query.length() - " UNION ALL ".length());
-		query.append(")");
-		followUp.setLength(followUp.length() - " UNION ALL ".length());
-		followUp.append(")");
-
 	}
 
 	public Uni<Tuple2<List<Map<String, Object>>, QueryRemoteHost>> queryForEntities(String tenant,

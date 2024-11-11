@@ -1643,7 +1643,7 @@ public class EntityService {
 	private Uni<NGSILDOperationResult> localMergePatch(MergePatchRequest request, String entityId, Context context) {
 		return entityDAO.mergePatch(request).onItem().transformToUni(result -> {
 			List<ResponseException> collectedFails = handleMergePatchDBResult(result, request.getTenant(), entityId);
-			if(!collectedFails.isEmpty()) {
+			if (!collectedFails.isEmpty()) {
 				collectedFails.forEach(e -> {
 					logger.error("Failed to send on of the messages", e);
 				});
@@ -1656,12 +1656,13 @@ public class EntityService {
 		});
 	}
 
-	private List<ResponseException> handleMergePatchDBResult(Map<String, Object> result, String tenant, String entityId) {
+	private List<ResponseException> handleMergePatchDBResult(Map<String, Object> result, String tenant,
+			String entityId) {
 		Map<String, List<String>> updated = (Map<String, List<String>>) result.get("updated");
 		Map<String, List<String>> deleted = (Map<String, List<String>>) result.get("deleted");
 		Map<String, Object> prev = (Map<String, Object>) result.get("old");
 		Map<String, Object> updatedEntity = (Map<String, Object>) result.get("new");
-		
+
 		List<ResponseException> collectedFails = Lists.newArrayList();
 		if (!deleted.isEmpty()) {
 			for (Entry<String, List<String>> attrEntry : deleted.entrySet()) {
@@ -1678,8 +1679,7 @@ public class EntityService {
 					}
 				} else {
 					for (String datasetId : attrEntry.getValue()) {
-						deleteReq = new DeleteAttributeRequest(tenant, entityId, attr, datasetId,
-								false, zip);
+						deleteReq = new DeleteAttributeRequest(tenant, entityId, attr, datasetId, false, zip);
 						deleteReq.setPrevPayloadFromSingle(entityId, prev);
 						try {
 							MicroServiceUtils.serializeAndSplitObjectAndEmit(deleteReq, messageSize, entityEmitter,
@@ -1698,21 +1698,19 @@ public class EntityService {
 			for (Entry<String, List<String>> attrEntry : updated.entrySet()) {
 				String attr = attrEntry.getKey();
 
-				
 				List<Map<String, Object>> attrib = (List<Map<String, Object>>) updatedEntity.get(attr);
 				for (String datasetId : attrEntry.getValue()) {
 					Map<String, Object> searchedInstance = null;
 					for (Map<String, Object> attrInstance : attrib) {
 						Object datasetIdObj = attrInstance.get(NGSIConstants.NGSI_LD_DATA_SET_ID);
-						if ((datasetId == null && datasetIdObj == null)
-								|| (datasetId != null && datasetIdObj != null
-										&& datasetId.equals(((List<Map<String, String>>) datasetIdObj).get(0)
-												.get(NGSIConstants.JSON_LD_ID)))) {
+						if ((datasetId == null && datasetIdObj == null) || (datasetId != null && datasetIdObj != null
+								&& datasetId.equals(((List<Map<String, String>>) datasetIdObj).get(0)
+										.get(NGSIConstants.JSON_LD_ID)))) {
 							searchedInstance = attrInstance;
 							break;
 						}
 					}
-					if(searchedInstance != null) {
+					if (searchedInstance != null) {
 						Map<String, Object> tmp = Maps.newHashMap();
 						tmp.put(attr, Lists.newArrayList(searchedInstance));
 						tmp.put(NGSIConstants.JSON_LD_TYPE, type);
@@ -2024,7 +2022,8 @@ public class EntityService {
 						for (Map<String, Object> success : successes) {
 							String entityId = (String) success.get("id");
 							Map<String, Object> old = (Map<String, Object>) success.get("old");
-							handleMergePatchDBResult(Map.of("old", old, "new", success.get("new"), "deleted", success.get("deleted"), "updated", success.get("updated")), tenant, entityId);
+							handleMergePatchDBResult(Map.of("old", old, "new", success.get("new"), "deleted",
+									success.get("deleted"), "updated", success.get("updated")), tenant, entityId);
 							MicroServiceUtils.putIntoIdMap(oldEntities, entityId, old);
 							NGSILDOperationResult opResult = new NGSILDOperationResult(AppConstants.MERGE_PATCH_REQUEST,
 									entityId);
@@ -2072,6 +2071,11 @@ public class EntityService {
 			});
 			return result;
 		});
+	}
+
+	public Uni<Void> updateValueField(String tenant, String id, String type, String attribId, String datasetId,
+			Map<String, Object> expandedValue) {
+		return entityDAO.updateValueField(tenant, id, attribId, datasetId, expandedValue);
 	}
 
 }

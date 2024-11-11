@@ -309,7 +309,7 @@ public class QueryController {
 									params.getGeoQueryTerm(), params.getqQueryTerm(), params.getScopeQueryTerm(),
 									params.getLanguageQueryTerm(), 1, 0, params.getContext(), request.headers(), false,
 									params.getDataSetIdTerm(), null, -1, distEntities, params.getPickTerm(),
-									params.getOmitTerm(), params.getCheckSum(), params.getViaHeaders())
+									params.getOmitTerm(), params.getCheckSum(), params.getViaHeaders(), null)
 							.onItem().transform(t -> {
 								return HttpUtils.generateEntityMapResult(t.getItem2());
 							}).onFailure().recoverWithItem(HttpUtils::handleControllerExceptions);
@@ -370,7 +370,7 @@ public class QueryController {
 							qP.getqQueryTerm(), qP.getCsfQueryTerm(), qP.getGeoQueryTerm(), qP.getScopeQueryTerm(),
 							qP.getLanguageQueryTerm(), qP.getLimit(), offset, count, localOnly, qP.getContext(),
 							request.headers(), doNotCompact, qP.getJsonKeys(), qP.getDataSetIdTerm(), join, joinLevel,
-							distEntities, qP.getPickTerm(), qP.getOmitTerm(), qP.getCheckSum(), qP.getViaHeaders())
+							distEntities, qP.getPickTerm(), qP.getOmitTerm(), qP.getCheckSum(), qP.getViaHeaders(), null)
 							.onItem().transform(qR -> Tuple5.of(qR, qP.getFinalOptions(), qP.getAcceptHeader(),
 									qP.getLimit(), qP.getContext()));
 				});

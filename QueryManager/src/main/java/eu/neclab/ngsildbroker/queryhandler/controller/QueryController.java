@@ -377,7 +377,7 @@ public class QueryController {
 
 	}
 
-	private Uni<Query> getQueryParam(HttpServerRequest request, String id, String typeQuery, String idPattern,
+	private Uni<Query> getQueryParam(HttpServerRequest request, String id, String typeQueryInput, String idPattern,
 			String attrs, String qInput, String csf, String geometry, String georelInput, String coordinates,
 			String geoproperty, String geometryProperty, String lang, String scopeQ, boolean localOnly, String options,
 			Integer limit, int offset, boolean count, String containedBy, String join, int joinLevel,
@@ -393,12 +393,13 @@ public class QueryController {
 		}
 		String q;
 		String georel;
+		String typeQuery;
 		if (format != null && !format.isEmpty()) {
 			options += "," + format;
 		}
-
+		String decodedUri = URLDecoder.decode(request.absoluteURI(), StandardCharsets.UTF_8);
 		if (qInput != null) {
-			String uri = URLDecoder.decode(request.absoluteURI(), StandardCharsets.UTF_8);
+			String uri = decodedUri;
 			uri = uri.substring(uri.indexOf("q=") + 2);
 			int index = uri.indexOf('&');
 			if (index != -1) {
@@ -407,6 +408,19 @@ public class QueryController {
 			q = uri.replaceAll("\"", "");
 		} else {
 			q = null;
+		}
+		if(typeQueryInput != null) {
+			String uri = decodedUri;
+			int start = uri.indexOf("type=") + 5;
+			int end = uri.indexOf('&', start);
+			if (end != -1) {
+				typeQuery = uri.substring(start, end);
+			}else {
+				typeQuery = uri.substring(start);
+			}
+			
+		}else {
+			typeQuery = null;
 		}
 		if (maxDistance != null) {
 			georel = georelInput + ";maxDistance=" + maxDistance;

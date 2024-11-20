@@ -132,7 +132,7 @@ public class QueryDAO {
 			StringBuilder query = new StringBuilder();
 			int dollar = 1;
 			Tuple tuple = Tuple.tuple();
-			
+
 			query.append("with D0 as(");
 			if (count && limit == 0 && dataSetIdTerm == null) {
 				query.append("SELECT COUNT(ENTITY)");
@@ -1083,7 +1083,7 @@ public class QueryDAO {
 		});
 	}
 
-	private void generateJoinQuery(StringBuilder query, StringBuilder followUp, int joinLevel) {
+	private void generateJoinQuery(StringBuilder query, StringBuilder followUp, int joinLevel, boolean localOnly) {
 		query.append(", ");
 		followUp.append(", ");
 		int counter;
@@ -1134,18 +1134,26 @@ public class QueryDAO {
 			query.append(NGSIConstants.NGSI_LD_HAS_OBJECT_LIST);
 			query.append(",0,");
 			query.append(NGSIConstants.JSON_LD_LIST);
-			query.append("}' ELSE null END) AS Z, JSONB_ARRAY_ELEMENTS(Y -> '");
-			query.append(NGSIConstants.NGSI_LD_OBJECT_TYPE);
-			query.append("') AS E_TYPES WHERE Y #>> '{");
+			query.append("}' ELSE null END) AS Z");
+			if (!localOnly) {
+				query.append(", JSONB_ARRAY_ELEMENTS(Y -> '");
+				query.append(NGSIConstants.NGSI_LD_OBJECT_TYPE);
+				query.append("') AS E_TYPES");
+			}
+			query.append("WHERE Y #>> '{");
 			query.append(NGSIConstants.JSON_LD_TYPE);
 			query.append(",0}' = ANY('{");
 			query.append(NGSIConstants.NGSI_LD_RELATIONSHIP);
 			query.append(",");
 			query.append(NGSIConstants.NGSI_LD_LISTRELATIONSHIP);
-			query.append("}') AND Y ? '");
-			query.append(NGSIConstants.NGSI_LD_OBJECT_TYPE);
-			query.append("' GROUP BY y.value, z.value), ");
-	
+			query.append("}')");
+			if (!localOnly) {
+				query.append(" AND Y ? '");
+				query.append(NGSIConstants.NGSI_LD_OBJECT_TYPE);
+				query.append('\'');
+			}
+			query.append(" GROUP BY y.value, z.value), ");
+
 			query.append('D');
 			query.append(counter + 1);
 			query.append(
@@ -1154,10 +1162,14 @@ public class QueryDAO {
 			query.append(counter + 1);
 			query.append(" LEFT JOIN ENTITY as E on C");
 			query.append(counter + 1);
-			query.append(".link = E.ID WHERE C");
-			query.append(counter + 1);
-			query.append(".ET && E.E_TYPES), ");
-	
+			query.append(".link = E.ID");
+			if (!localOnly) {
+				query.append(" WHERE C");
+				query.append(counter + 1);
+				query.append(".ET && E.E_TYPES");
+			}
+			query.append("), ");
+
 			followUp.append('B');
 			followUp.append(counter + 1);
 			followUp.append(" AS (SELECT ");
@@ -1204,18 +1216,27 @@ public class QueryDAO {
 			followUp.append(NGSIConstants.NGSI_LD_HAS_OBJECT_LIST);
 			followUp.append(",0,");
 			followUp.append(NGSIConstants.JSON_LD_LIST);
-			followUp.append("}'' ELSE null END) AS Z, JSONB_ARRAY_ELEMENTS(Y -> ''");
-			followUp.append(NGSIConstants.NGSI_LD_OBJECT_TYPE);
-			followUp.append("'') AS E_TYPES WHERE Y #>> ''{");
+
+			followUp.append("}'' ELSE null END) AS Z");
+			if (!localOnly) {
+				followUp.append(", JSONB_ARRAY_ELEMENTS(Y -> ''");
+				followUp.append(NGSIConstants.NGSI_LD_OBJECT_TYPE);
+				followUp.append("'') AS E_TYPES");
+			}
+			followUp.append(" WHERE Y #>> ''{");
 			followUp.append(NGSIConstants.JSON_LD_TYPE);
 			followUp.append(",0}'' = ANY(''{");
 			followUp.append(NGSIConstants.NGSI_LD_RELATIONSHIP);
 			followUp.append(",");
 			followUp.append(NGSIConstants.NGSI_LD_LISTRELATIONSHIP);
-			followUp.append("}'') AND Y ? ''");
-			followUp.append(NGSIConstants.NGSI_LD_OBJECT_TYPE);
-			followUp.append("'' GROUP BY y.value, z.value), ");
-	
+			followUp.append("}'')");
+			if (!localOnly) {
+				followUp.append(" AND Y ? ''");
+				followUp.append(NGSIConstants.NGSI_LD_OBJECT_TYPE);
+				followUp.append("''");
+			}
+			followUp.append(" GROUP BY y.value, z.value), ");
+
 			followUp.append('D');
 			followUp.append(counter + 1);
 			followUp.append(" as (SELECT E.ID as id, E.ENTITY as entity, FALSE as parent, E.E_TYPES as E_TYPES, null");
@@ -1223,18 +1244,22 @@ public class QueryDAO {
 			followUp.append(counter + 1);
 			followUp.append(" LEFT JOIN ENTITY as E on C");
 			followUp.append(counter + 1);
-			followUp.append(".link = E.ID WHERE C");
-			followUp.append(counter + 1);
-			followUp.append(".ET && E.E_TYPES), ");
+			followUp.append(".link = E.ID");
+			if (!localOnly) {
+				followUp.append(" WHERE C");
+				followUp.append(counter + 1);
+				followUp.append(".ET && E.E_TYPES");
+			}
+			followUp.append("), ");
 		}
-	
+
 		query.append(" JOINENTITIES AS (");
 		followUp.append(" JOINENTITIES AS (");
 		for (int i = 1; i <= joinLevel; i++) {
 			query.append("SELECT * FROM D");
 			query.append(i);
 			query.append(" UNION ALL ");
-	
+
 			followUp.append("SELECT * FROM D");
 			followUp.append(i);
 			followUp.append(" UNION ALL ");
@@ -1243,7 +1268,7 @@ public class QueryDAO {
 		query.append(")");
 		followUp.setLength(followUp.length() - " UNION ALL ".length());
 		followUp.append(")");
-	
+
 	}
 
 	public Uni<Tuple2<EntityCache, EntityMap>> createEntityMapAndFillEntityCache(String tenant,
@@ -1251,7 +1276,8 @@ public class QueryDAO {
 			QQueryTerm qQuery, GeoQueryTerm geoQuery, ScopeQueryTerm scopeQuery, Context context, int limit, int offset,
 			DataSetIdTerm dataSetIdTerm, String join, int joinLevel, String qToken, PickTerm pickTerm,
 			OmitTerm omitTerm, String queryChecksum, boolean splitEntities,
-			boolean regEmptyOrNoRegEntryAndNoLinkedQuery, boolean noRootLevelRegEntryAndLinkedQuery, String typePattern) {
+			boolean regEmptyOrNoRegEntryAndNoLinkedQuery, boolean noRootLevelRegEntryAndLinkedQuery, String typePattern,
+			boolean localOnly) {
 
 		return clientManager.getClient(tenant, false).onItem().transformToUni(client -> {
 			StringBuilder query = new StringBuilder();
@@ -1268,7 +1294,7 @@ public class QueryDAO {
 			query.append("WITH a as (SELECT ID");
 
 			query.append(" FROM ENTITY WHERE ");
-			if(typePattern != null) {
+			if (typePattern != null) {
 				query.append("EXISTS (SELECT TRUE FROM UNNEST(E_TYPES) AS E_TYPE WHERE E_TYPE ~ $");
 				query.append(dollar);
 				dollar++;
@@ -1370,7 +1396,7 @@ public class QueryDAO {
 						queryToStoreWherePart.append(" AND ");
 					}
 					queryParams.setqQueryTerm(qQuery);
-					dollar = qQuery.toSql(query, queryToStoreWherePart, dollar, tuple, splitEntities, false);
+					dollar = qQuery.toSql(query, queryToStoreWherePart, dollar, tuple, splitEntities, localOnly);
 					sqlAdded = true;
 				} else if (geoQuery != null) {
 					if (sqlAdded) {
@@ -1428,7 +1454,8 @@ public class QueryDAO {
 						queryToStoreWherePart.append(" AND ");
 					}
 					queryParams.setqQueryTerm(qQuery);
-					dollar = qQuery.toSql(query, queryToStoreWherePart, dollar, tuple, !regEmptyOrNoRegEntryAndNoLinkedQuery && splitEntities, false);
+					dollar = qQuery.toSql(query, queryToStoreWherePart, dollar, tuple,
+							!regEmptyOrNoRegEntryAndNoLinkedQuery && splitEntities, localOnly);
 					sqlAdded = true;
 				}
 				if (dataSetIdTerm != null) {
@@ -1499,7 +1526,7 @@ public class QueryDAO {
 			queryToStoreSelectPart.append(" WHERE ");
 
 			if (doJoin) {
-				generateJoinQuery(query, queryToStoreSelectPart, joinLevel);
+				generateJoinQuery(query, queryToStoreSelectPart, joinLevel, localOnly);
 			}
 			queryToStoreFinalSelectPart.append(
 					" SELECT null::text as id, null::jsonb as entity, null::boolean as parent, null::text[] as e_types, c.entity_map as entity_map FROM c UNION ALL SELECT D0.ID as id, D0.ENTITY as entity, D0.parent as parent, D0.E_TYPES as e_types, null::jsonb as entity_map FROM D0");
@@ -1585,14 +1612,14 @@ public class QueryDAO {
 		EntityMap resultEntityMap = EntityMap.fromJson(qToken, first.getJsonObject(4), objectMapper);
 		Row row;
 		String id;
-		
+
 		JsonObject entityObj;
 		while (it.hasNext()) {
 			row = it.next();
 			id = row.getString(0);
 			entityObj = row.getJsonObject(1);
-			
-			//String[] types = row.getArrayOfStrings(3);
+
+			// String[] types = row.getArrayOfStrings(3);
 
 			if (entityObj != null) {
 				Map<String, Object> entity = entityObj.getMap();

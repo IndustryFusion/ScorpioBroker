@@ -196,16 +196,17 @@ public class QueryController {
 		List<Object> contextHeader = HttpUtils.getAtContext(request);
 		return HttpUtils.getContext(contextHeader, ldService).onItem().transformToUni(context -> {
 			if (details) {
-				return queryService.getTypesWithDetail(HttpUtils.getTenant(request), localOnly,request.headers()).onItem()
-						.transformToUni(types -> {
+				return queryService.getTypesWithDetail(HttpUtils.getTenant(request), localOnly, request.headers())
+						.onItem().transformToUni(types -> {
 							return HttpUtils.generateEntityResult(contextHeader, context, acceptHeader, types, null,
 									null, null, ldService, null, null);
 						});
 			} else {
-				return queryService.getTypes(HttpUtils.getTenant(request), localOnly,request.headers()).onItem().transformToUni(types -> {
-					return HttpUtils.generateEntityResult(contextHeader, context, acceptHeader, types, null, null, null,
-							ldService, null, null);
-				});
+				return queryService.getTypes(HttpUtils.getTenant(request), localOnly, request.headers()).onItem()
+						.transformToUni(types -> {
+							return HttpUtils.generateEntityResult(contextHeader, context, acceptHeader, types, null,
+									null, null, ldService, null, null);
+						});
 			}
 		}).onFailure().recoverWithItem(HttpUtils::handleControllerExceptions);
 
@@ -221,9 +222,8 @@ public class QueryController {
 		}
 		List<Object> contextHeader = HttpUtils.getAtContext(request);
 		return HttpUtils.getContext(contextHeader, ldService).onItem().transformToUni(context -> {
-			return queryService
-					.getType(HttpUtils.getTenant(request), context.expandIri(type, false, true, null, null), localOnly,request.headers())
-					.onItem().transformToUni(map -> {
+			return queryService.getType(HttpUtils.getTenant(request), context.expandIri(type, false, true, null, null),
+					localOnly, request.headers()).onItem().transformToUni(map -> {
 						if (map.isEmpty()) {
 							return Uni.createFrom().failure(new ResponseException(ErrorType.NotFound));
 						} else {
@@ -247,13 +247,14 @@ public class QueryController {
 		List<Object> contextHeader = HttpUtils.getAtContext(request);
 		return HttpUtils.getContext(contextHeader, ldService).onItem().transformToUni(context -> {
 			if (!details) {
-				return queryService.getAttribs(HttpUtils.getTenant(request), localOnly,request.headers()).onItem().transformToUni(map -> {
-					return HttpUtils.generateEntityResult(contextHeader, context, acceptHeader, map, null, null, null,
-							ldService, null, null);
-				});
+				return queryService.getAttribs(HttpUtils.getTenant(request), localOnly, request.headers()).onItem()
+						.transformToUni(map -> {
+							return HttpUtils.generateEntityResult(contextHeader, context, acceptHeader, map, null, null,
+									null, ldService, null, null);
+						});
 			} else {
-				return queryService.getAttribsWithDetails(HttpUtils.getTenant(request), localOnly,request.headers()).onItem()
-						.transformToUni(list -> {
+				return queryService.getAttribsWithDetails(HttpUtils.getTenant(request), localOnly, request.headers())
+						.onItem().transformToUni(list -> {
 							return HttpUtils.generateEntityResult(contextHeader, context, acceptHeader, list, null,
 									null, null, ldService, null, null);
 						});
@@ -274,7 +275,8 @@ public class QueryController {
 		List<Object> headerContext = HttpUtils.getAtContext(request);
 		return HttpUtils.getContext(headerContext, ldService).onItem().transformToUni(context -> {
 			return queryService.getAttrib(HttpUtils.getTenant(request),
-					context.expandIri(attribute, false, true, null, null), localOnly,request.headers()).onItem().transformToUni(map -> {
+					context.expandIri(attribute, false, true, null, null), localOnly, request.headers()).onItem()
+					.transformToUni(map -> {
 						if (map.isEmpty()) {
 							return Uni.createFrom().failure(new ResponseException(ErrorType.NotFound));
 						} else {
@@ -309,7 +311,7 @@ public class QueryController {
 									params.getGeoQueryTerm(), params.getqQueryTerm(), params.getScopeQueryTerm(),
 									params.getLanguageQueryTerm(), 1, 0, params.getContext(), request.headers(), false,
 									params.getDataSetIdTerm(), null, -1, distEntities, params.getPickTerm(),
-									params.getOmitTerm(), params.getCheckSum(), params.getViaHeaders(), null)
+									params.getOmitTerm(), params.getCheckSum(), params.getViaHeaders(), null, false)
 							.onItem().transform(t -> {
 								return HttpUtils.generateEntityMapResult(t.getItem2());
 							}).onFailure().recoverWithItem(HttpUtils::handleControllerExceptions);
@@ -365,12 +367,14 @@ public class QueryController {
 				geoproperty, geometryProperty, lang, scopeQ, localOnly, options, limit, offset, count, containedBy,
 				join, joinLevel, doNotCompact, entityMapToken, entityMapRetrieve, maxDistance, minDistance, pick, omit,
 				format, jsonKeysQP, datasetId, distEntities).onItem().transformToUni(qP -> {
-					return queryService.query(HttpUtils.getTenant(request), qP.getEntityMapToken(),
-							qP.isTokenProvided(), qP.getIdsAndTypeAndIdPattern(), qP.getAttrsQueryTerm(),
-							qP.getqQueryTerm(), qP.getCsfQueryTerm(), qP.getGeoQueryTerm(), qP.getScopeQueryTerm(),
-							qP.getLanguageQueryTerm(), qP.getLimit(), offset, count, localOnly, qP.getContext(),
-							request.headers(), doNotCompact, qP.getJsonKeys(), qP.getDataSetIdTerm(), join, joinLevel,
-							distEntities, qP.getPickTerm(), qP.getOmitTerm(), qP.getCheckSum(), qP.getViaHeaders(), null)
+					return queryService
+							.query(HttpUtils.getTenant(request), qP.getEntityMapToken(), qP.isTokenProvided(),
+									qP.getIdsAndTypeAndIdPattern(), qP.getAttrsQueryTerm(), qP.getqQueryTerm(),
+									qP.getCsfQueryTerm(), qP.getGeoQueryTerm(), qP.getScopeQueryTerm(),
+									qP.getLanguageQueryTerm(), qP.getLimit(), offset, count, localOnly, qP.getContext(),
+									request.headers(), doNotCompact, qP.getJsonKeys(), qP.getDataSetIdTerm(), join,
+									joinLevel, distEntities, qP.getPickTerm(), qP.getOmitTerm(), qP.getCheckSum(),
+									qP.getViaHeaders(), null)
 							.onItem().transform(qR -> Tuple5.of(qR, qP.getFinalOptions(), qP.getAcceptHeader(),
 									qP.getLimit(), qP.getContext()));
 				});
@@ -384,8 +388,7 @@ public class QueryController {
 			boolean doNotCompact, String entityMapToken, boolean entityMapRetrieve, String maxDistance,
 			String minDistance, String pick, String omit, String format, String jsonKeysQP, String datasetId,
 			boolean distEntities) {
-		
-		
+
 		int acceptHeader = HttpUtils.parseAcceptHeader(request.headers().getAll("Accept"));
 		if ((pick != null && omit != null) || (pick != null && attrs != null) || (attrs != null && omit != null)) {
 			return Uni.createFrom().failure(
@@ -409,17 +412,17 @@ public class QueryController {
 		} else {
 			q = null;
 		}
-		if(typeQueryInput != null) {
+		if (typeQueryInput != null) {
 			String uri = decodedUri;
 			int start = uri.indexOf("type=") + 5;
 			int end = uri.indexOf('&', start);
 			if (end != -1) {
 				typeQuery = uri.substring(start, end);
-			}else {
+			} else {
 				typeQuery = uri.substring(start);
 			}
-			
-		}else {
+
+		} else {
 			typeQuery = null;
 		}
 		if (maxDistance != null) {

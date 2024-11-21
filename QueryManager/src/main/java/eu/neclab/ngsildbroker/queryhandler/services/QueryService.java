@@ -1134,58 +1134,7 @@ public class QueryService {
 
 	}
 
-	private Uni<QueryResult> localQuery(String tenant,
-			List<Tuple3<String[], TypeQueryTerm, String>> idsAndTypeQueryAndIdPattern, AttrsQueryTerm attrsQuery,
-			QQueryTerm qQuery, GeoQueryTerm geoQuery, ScopeQueryTerm scopeQuery, LanguageQueryTerm langQuery, int limit,
-			int offSet, boolean count, DataSetIdTerm dataSetIdTerm, String join, int joinLevel, PickTerm pickTerm,
-			OmitTerm omitTerm) {
-		return queryDAO
-				.queryLocalOnly(tenant, idsAndTypeQueryAndIdPattern, attrsQuery, qQuery, geoQuery, scopeQuery,
-						langQuery, limit, offSet, count, dataSetIdTerm, join, joinLevel, pickTerm, omitTerm)
-				.onItem().transform(rows -> {
-					QueryResult result = new QueryResult();
-					if (limit == 0 && count) {
-						result.setCount(rows.iterator().next().getLong(0));
-					} else {
-						RowIterator<Row> it = rows.iterator();
-						Row next = null;
-
-						List<Map<String, Object>> resultData = new ArrayList<Map<String, Object>>(rows.size());
-						Map<String, Object> entity;
-						while (it.hasNext()) {
-							next = it.next();
-							entity = next.getJsonObject(0).getMap();
-							resultData.add(entity);
-
-						}
-						if (count) {
-							Long resultCount = next.getLong(1);
-							result.setCount(resultCount);
-							long leftAfter = resultCount - (offSet + limit);
-							if (leftAfter < 0) {
-								leftAfter = 0;
-							}
-							result.setResultsLeftAfter(leftAfter);
-						} else {
-							if (resultData.size() < limit) {
-								result.setResultsLeftAfter(0l);
-							} else {
-								result.setResultsLeftAfter((long) limit);
-							}
-
-						}
-						long leftBefore = offSet;
-
-						result.setResultsLeftBefore(leftBefore);
-						result.setLimit(limit);
-						result.setOffset(offSet);
-						result.setData(resultData);
-					}
-
-					return result;
-				});
-	}
-
+	
 	public Uni<List<Map<String, Object>>> getTypesWithDetail(String tenant, boolean localOnly,
 			io.vertx.core.MultiMap headersFromReq) {
 		Uni<List<Map<String, Object>>> local = queryDAO.getTypesWithDetails(tenant);

@@ -1140,7 +1140,7 @@ public class QueryDAO {
 				query.append(NGSIConstants.NGSI_LD_OBJECT_TYPE);
 				query.append("') AS E_TYPES");
 			}
-			query.append("WHERE Y #>> '{");
+			query.append(" WHERE Y #>> '{");
 			query.append(NGSIConstants.JSON_LD_TYPE);
 			query.append(",0}' = ANY('{");
 			query.append(NGSIConstants.NGSI_LD_RELATIONSHIP);

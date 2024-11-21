@@ -123,191 +123,6 @@ public class QueryDAO {
 		});
 	}
 
-	public Uni<RowSet<Row>> queryLocalOnly(String tenantId,
-			List<Tuple3<String[], TypeQueryTerm, String>> idsAndTypeQueryAndIdPattern, AttrsQueryTerm attrsQuery,
-			QQueryTerm qQuery, GeoQueryTerm geoQuery, ScopeQueryTerm scopeQuery, LanguageQueryTerm langQuery, int limit,
-			int offSet, boolean count, DataSetIdTerm dataSetIdTerm, String join, int joinLevel, PickTerm pickTerm,
-			OmitTerm omitTerm) {
-		return clientManager.getClient(tenantId, false).onItem().transformToUni(client -> {
-			StringBuilder query = new StringBuilder();
-			int dollar = 1;
-			Tuple tuple = Tuple.tuple();
-
-			query.append("with D0 as(");
-			if (count && limit == 0 && dataSetIdTerm == null) {
-				query.append("SELECT COUNT(ENTITY)");
-			} else {
-				query.append("SELECT ");
-				if (join != null && joinLevel > 0) {
-					query.append("ID, true AS PARENT, ");
-				}
-				if (attrsQuery != null) {
-					dollar = attrsQuery.toSqlConstructEntity(query, tuple, dollar, dataSetIdTerm);
-				} else {
-					query.append("ENTITY");
-				}
-				if (count) {
-					query.append(", COUNT(*) as count");
-				}
-				query.append(" as entity, id");
-			}
-			query.append(" FROM ENTITY WHERE ");
-			if (attrsQuery == null && geoQuery == null && qQuery == null && idsAndTypeQueryAndIdPattern == null
-					&& scopeQuery == null) {
-				query.append("TRUE ");
-			} else {
-
-				boolean sqlAdded = false;
-
-				if (idsAndTypeQueryAndIdPattern != null) {
-					query.append('(');
-					sqlAdded = true;
-					for (Tuple3<String[], TypeQueryTerm, String> t : idsAndTypeQueryAndIdPattern) {
-						TypeQueryTerm typeQuery = t.getItem2();
-						String[] ids = t.getItem1();
-						String idPattern = t.getItem3();
-						boolean tSqlAdded = false;
-						query.append('(');
-						if (typeQuery != null) {
-							dollar = typeQuery.toSql(query, tuple, dollar);
-							tSqlAdded = true;
-						}
-						if (ids != null) {
-							if (tSqlAdded) {
-								query.append(" AND ");
-							}
-							query.append("id IN (");
-							for (String id : ids) {
-								query.append('$');
-								query.append(dollar);
-								query.append(',');
-								tuple.addString(id);
-								dollar++;
-							}
-
-							query.setCharAt(query.length() - 1, ')');
-							tSqlAdded = true;
-						}
-						if (idPattern != null) {
-							if (tSqlAdded) {
-								query.append(" AND ");
-							}
-							query.append("id ~ $");
-							query.append(dollar);
-							tuple.addString(idPattern);
-							dollar++;
-							tSqlAdded = true;
-						}
-						query.append(") OR ");
-					}
-					query.setLength(query.length() - 4);
-					query.append(')');
-				}
-
-				if (attrsQuery != null) {
-					if (sqlAdded) {
-						query.append(" AND ");
-					}
-					dollar = attrsQuery.toSql(query, tuple, dollar);
-					sqlAdded = true;
-				}
-				if (geoQuery != null) {
-					if (sqlAdded) {
-						query.append(" AND ");
-					}
-					dollar = geoQuery.toSql(query, tuple, dollar);
-					sqlAdded = true;
-				}
-
-				if (qQuery != null) {
-					if (sqlAdded) {
-						query.append(" AND ");
-					}
-					dollar = qQuery.toSql(query, dollar, tuple, false, true);
-					sqlAdded = true;
-				}
-
-				if (scopeQuery != null) {
-					query.append(" AND ");
-					scopeQuery.toSql(query);
-				}
-			}
-			if (!(count && limit == 0 && dataSetIdTerm == null)) {
-				query.append(" GROUP BY ENTITY,id");
-			}
-			if (limit != 0) {
-				query.append(" LIMIT ");
-				query.append(limit);
-				query.append(" OFFSET ");
-				query.append(offSet);
-			}
-			query.append(")");
-			int counter = 0;
-			if (join != null && joinLevel > 0) {
-
-				query.append(", ");
-				for (counter = 0; counter < joinLevel; counter++) {
-					query.append('B');
-					query.append(counter + 1);
-					query.append(" AS (SELECT ");
-					query.append('D');
-					query.append(counter);
-					query.append(".ID AS ID, X.VALUE AS VALUE FROM D");
-					query.append(counter);
-					query.append(", JSONB_EACH(D");
-					query.append(counter);
-					query.append(".ENTITY) AS X WHERE JSONB_TYPEOF(X.VALUE) = 'array'), ");
-					query.append('C');
-					query.append(counter + 1);
-					query.append(" AS (SELECT distinct Z ->> '@id' as link FROM B");
-					query.append(counter + 1);
-					query.append(", JSONB_ARRAY_ELEMENTS(B");
-					query.append(counter + 1);
-					query.append(
-							".VALUE) AS Y, JSONB_ARRAY_ELEMENTS(Y #> '{https://uri.etsi.org/ngsi-ld/hasObject}') AS Z WHERE Y #>> '{@type,0}' = 'https://uri.etsi.org/ngsi-ld/Relationship'), ");
-					query.append('D');
-					query.append(counter + 1);
-					query.append(" as (SELECT E.ID as id, false as parent, E.ENTITY as entity");
-					if (count) {
-						query.append(", -1 as count");
-					}
-					query.append(" from C");
-					query.append(counter + 1);
-					query.append(" join ENTITY as E on C");
-					query.append(counter + 1);
-					query.append(".link = E.ID), ");
-				}
-				query.setLength(query.length() - 2);
-				query.append(" SELECT * FROM (");
-				for (int i = 0; i <= joinLevel; i++) {
-					query.append("SELECT * FROM D");
-					query.append(i);
-					query.append(" UNION ALL ");
-				}
-				query.setLength(query.length() - " UNION ALL ".length());
-				query.append(") as xyz group by id, entity, parent");
-			}
-
-			if (dataSetIdTerm != null) {
-				query.append(",");
-				// dollar = dataSetIdTerm.toSql(query, tuple, dollar, entitySelect);
-				if (count && limit == 0) {
-					query.append("select count(x.entity) from x");
-				} else {
-					query.append("select x.entity, (select count(x.entity) from x),x.id from x");
-				}
-			} else {
-				query.append("select a.entity,(select count(*) from a) from a");
-
-			}
-			query.append(';');
-			String queryString = query.toString();
-			logger.debug("SQL REQUEST: " + queryString);
-			logger.debug("SQL TUPLE: " + tuple.deepToString());
-			return client.preparedQuery(queryString).execute(tuple);
-		});
-	}
-
 	public Uni<Map<String, Object>> getTypes(String tenantId) {
 		return clientManager.getClient(tenantId, false).onItem().transformToUni(client -> {
 			return client.preparedQuery(
@@ -1114,9 +929,15 @@ public class QueryDAO {
 			query.append(NGSIConstants.NGSI_LD_HAS_OBJECT);
 			query.append(",0,");
 			query.append(NGSIConstants.JSON_LD_ID);
-			query.append("}' ELSE NULL END) AS LINK, ARRAY_AGG(E_TYPES ->> '");
-			query.append(NGSIConstants.JSON_LD_ID);
-			query.append("') AS ET FROM B");
+			query.append("}' ELSE NULL END) AS LINK");
+			if (!localOnly) {
+				query.append(", ARRAY_AGG(E_TYPES ->> '");
+				query.append(NGSIConstants.JSON_LD_ID);
+				query.append("') AS ET");
+			}else {
+				query.append(", null AS ET");
+			}
+			query.append(" FROM B");
 			query.append(counter + 1);
 			query.append(", JSONB_ARRAY_ELEMENTS(B");
 			query.append(counter + 1);
@@ -1135,11 +956,13 @@ public class QueryDAO {
 			query.append(",0,");
 			query.append(NGSIConstants.JSON_LD_LIST);
 			query.append("}' ELSE null END) AS Z");
-			if (!localOnly) {
+//			if (!localOnly) {
 				query.append(", JSONB_ARRAY_ELEMENTS(Y -> '");
 				query.append(NGSIConstants.NGSI_LD_OBJECT_TYPE);
 				query.append("') AS E_TYPES");
-			}
+//			} else {
+//				query.append(", null AS E_TYPES");
+//			}
 			query.append(" WHERE Y #>> '{");
 			query.append(NGSIConstants.JSON_LD_TYPE);
 			query.append(",0}' = ANY('{");
@@ -1196,9 +1019,15 @@ public class QueryDAO {
 			followUp.append(NGSIConstants.NGSI_LD_HAS_OBJECT);
 			followUp.append(",0,");
 			followUp.append(NGSIConstants.JSON_LD_ID);
-			followUp.append("}'' ELSE NULL END) AS LINK, ARRAY_AGG(E_TYPES ->> ''");
-			followUp.append(NGSIConstants.JSON_LD_ID);
-			followUp.append("'') AS ET FROM B");
+			followUp.append("}'' ELSE NULL END) AS LINK");
+			//if (!localOnly) {
+				followUp.append(", ARRAY_AGG(E_TYPES ->> ''");
+				followUp.append(NGSIConstants.JSON_LD_ID);
+				followUp.append("'') AS ET");
+//			} else {
+//				followUp.append(", null AS ET");
+//			}
+			followUp.append(" FROM B");
 			followUp.append(counter + 1);
 			followUp.append(", JSONB_ARRAY_ELEMENTS(B");
 			followUp.append(counter + 1);
@@ -1222,6 +1051,8 @@ public class QueryDAO {
 				followUp.append(", JSONB_ARRAY_ELEMENTS(Y -> ''");
 				followUp.append(NGSIConstants.NGSI_LD_OBJECT_TYPE);
 				followUp.append("'') AS E_TYPES");
+			} else {
+				followUp.append(", null AS E_TYPES");
 			}
 			followUp.append(" WHERE Y #>> ''{");
 			followUp.append(NGSIConstants.JSON_LD_TYPE);

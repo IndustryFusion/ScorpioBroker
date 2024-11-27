@@ -746,7 +746,7 @@ public class SubscriptionService {
 
 		List<Uni<Void>> unis = Lists.newArrayList();
 		logger.debug("checking subscriptions");
-		logger.debug(message.toString());
+		//logger.debug(message.toString());
 
 		for (SubscriptionRequest potentialSub : potentialSubs) {
 			logger.debug("Potential Sub");

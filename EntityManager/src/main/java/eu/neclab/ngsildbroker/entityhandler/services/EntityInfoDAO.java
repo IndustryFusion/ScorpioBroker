@@ -89,8 +89,11 @@ public class EntityInfoDAO {
 				entities.addAll(entityList);
 			});
 			Tuple tuple = Tuple.of(new JsonArray(entities), doReplace);
+			long start = System.currentTimeMillis();
 			return client.preparedQuery("SELECT * FROM NGSILD_UPSERTBATCH($1, $2)").execute(tuple).onItem()
 					.transform(rows -> {
+						long stop = System.currentTimeMillis();
+						logger.info("LOOOOOOOOK:" + ((stop - start) * 1000));
 						return rows.iterator().next().getJsonObject(0).getMap();
 					});
 		});

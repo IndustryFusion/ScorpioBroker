@@ -741,8 +741,8 @@ public class QueryDAO {
 			dollarCount = qQuery.toSql(query, dollarCount, tuple, false, true);
 		}
 		String sql = query.toString();
-		logger.debug("SQL Request: " + sql);
-		logger.debug("Tuple: " + tuple.deepToString());
+		//logger.debug("SQL Request: " + sql);
+		//logger.debug("Tuple: " + tuple.deepToString());
 		try {
 			logger.debug(JsonUtils.toPrettyString(types2EntityIds));
 		} catch (JsonGenerationException e) {
@@ -1415,8 +1415,8 @@ public class QueryDAO {
 			}
 
 			String queryString = query.toString();
-			logger.debug("SQL REQUEST: " + queryString);
-			logger.debug("SQL TUPLE: " + tuple.deepToString());
+//			logger.debug("SQL REQUEST: " + queryString);
+//			logger.debug("SQL TUPLE: " + tuple.deepToString());
 			return client.preparedQuery(queryString).execute(tuple).onItem()
 					.transform(rows -> putQueryResultIntoMapAndCache(rows, qToken));
 		}).onFailure().recoverWithUni(e -> {

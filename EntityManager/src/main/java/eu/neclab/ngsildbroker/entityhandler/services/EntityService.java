@@ -1388,7 +1388,7 @@ public class EntityService {
 
 					}
 					if (!request.getPayload().isEmpty()) {
-						logger.debug("Upsert batch request sending to kafka " + request.getIds());
+						//logger.debug("Upsert batch request sending to kafka " + request.getIds());
 						try {
 							MicroServiceUtils.serializeAndSplitObjectAndEmit(request, messageSize, entityEmitter,
 									objectMapper);

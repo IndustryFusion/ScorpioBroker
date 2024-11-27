@@ -90,7 +90,7 @@ public class HistoryDAO {
 			sql += "RETURNING (" + DBConstants.DBTABLE_TEMPORALENTITY + ".modifiedat = "
 					+ DBConstants.DBTABLE_TEMPORALENTITY + ".createdat)";
 			logger.debug(sql);
-			logger.debug(tuple.deepToString());
+			//logger.debug(tuple.deepToString());
 			return client.preparedQuery(sql).execute(tuple).onItem().transformToUni(rows -> {
 				List<Tuple> batch = Lists.newArrayList();
 				Object location = payload.get(NGSIConstants.NGSI_LD_LOCATION);
@@ -117,10 +117,6 @@ public class HistoryDAO {
 							batch.add(Tuple.of(request.getFirstId(), entry.getKey(), new JsonObject(attribEntry)));
 						}
 					}
-				}
-				logger.debug(insertSql);
-				for (Tuple entry : batch) {
-					logger.debug(entry.deepToString());
 				}
 				return client.preparedQuery(insertSql).executeBatch(batch).onItem()
 						.transform(rows1 -> !rows.iterator().next().getBoolean(0));
@@ -174,7 +170,7 @@ public class HistoryDAO {
 						} else {
 							tuple.addJsonArray(null);
 						}
-						logger.debug("batch type" + tuple.deepToString());
+						//logger.debug("batch type" + tuple.deepToString());
 						batchType.add(tuple);
 
 					} else {
@@ -189,7 +185,7 @@ public class HistoryDAO {
 							tuple.addJsonArray(null);
 						}
 						tuple.addString(entityId);
-						logger.debug("batch no type" + tuple.deepToString());
+						//logger.debug("batch no type" + tuple.deepToString());
 						batchNoType.add(tuple);
 					}
 					List<Tuple> attribsToFill;
@@ -211,7 +207,7 @@ public class HistoryDAO {
 								tuple = Tuple.of(entityId, entry.getKey(), new JsonObject(attribEntry));
 								attribsToFill.add(tuple);
 							}
-							logger.debug("attrib tuple " + tuple.deepToString());
+							//logger.debug("attrib tuple " + tuple.deepToString());
 
 						}
 					}

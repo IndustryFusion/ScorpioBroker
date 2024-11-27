@@ -87,7 +87,7 @@ public class MicroServiceUtils {
 				logger.error("Failed to serialize object", e);
 				throw new ResponseException(ErrorType.InternalError, "Failed to serialize object");
 			}
-			logger.debug("attempting to send request with max message size " + maxMessageSize);
+			//logger.debug("attempting to send request with max message size " + maxMessageSize);
 			base = base.substring(0, base.length() - 1);
 			base += ",\"" + AppConstants.PAYLOAD_SERIALIZATION_CHAR + "\":[";
 			String current = base;
@@ -226,9 +226,9 @@ public class MicroServiceUtils {
 					first = false;
 				}
 				if (current.length() != base.length()) {
-					logger.debug("finalizing message");
+					//logger.debug("finalizing message");
 					current = current.substring(0, current.length() - 1) + "]}";
-					logger.debug("finale messagesize: " + current.getBytes().length);
+					//logger.debug("finale messagesize: " + current.getBytes().length);
 					if (current.getBytes().length > maxMessageSize) {
 						logger.error("ALERT MESSAGE TO BIG");
 					}
@@ -264,14 +264,14 @@ public class MicroServiceUtils {
 						}
 						int messageLength = current.getBytes().length + id.getBytes().length
 								+ serializedPayload.getBytes().length + serializedPrevpayload.getBytes().length + 18;
-						logger.debug("message size after adding payload would be " + maxMessageSize);
+						//logger.debug("message size after adding payload would be " + maxMessageSize);
 						if (messageLength > maxMessageSize) {
 							if (first) {
 								throw new ResponseException(ErrorType.RequestEntityTooLarge);
 							}
-							logger.debug("finalizing message only prevpayload");
+							//logger.debug("finalizing message only prevpayload");
 							current = current.substring(0, current.length() - 1) + "]}";
-							logger.debug("finale messagesize only prevpayload: " + current.getBytes().length);
+							//logger.debug("finale messagesize only prevpayload: " + current.getBytes().length);
 							toSend.add(current);
 							current = base + "\"" + id + "\",";
 							if (zip) {
@@ -292,9 +292,9 @@ public class MicroServiceUtils {
 							current += ",";
 							first = true;
 						} else if (messageLength == maxMessageSize) {
-							logger.debug("finalizing message only prevpayload");
+							//logger.debug("finalizing message only prevpayload");
 							current = current.substring(0, current.length() - 1) + "]}";
-							logger.debug("finale messagesize only prevpayload: " + current.getBytes().length);
+							//logger.debug("finale messagesize only prevpayload: " + current.getBytes().length);
 							toSend.add(current);
 							current = base;
 							first = true;
@@ -321,9 +321,9 @@ public class MicroServiceUtils {
 					first = false;
 				}
 				if (current.length() != base.length()) {
-					logger.debug("finalizing message only prevpayload");
+					//logger.debug("finalizing message only prevpayload");
 					current = current.substring(0, current.length() - 1) + "]}";
-					logger.debug("finale messagesize only prevpayload: " + current.getBytes().length);
+					//logger.debug("finale messagesize only prevpayload: " + current.getBytes().length);
 					toSend.add(current);
 					current = base;
 				}
@@ -349,14 +349,14 @@ public class MicroServiceUtils {
 					}
 					int messageLength = current.getBytes().length + id.getBytes().length
 							+ serializedPayload.getBytes().length + serializedPrevpayload.getBytes().length + 18;
-					logger.debug("message size after adding payload would be " + maxMessageSize);
+					//logger.debug("message size after adding payload would be " + maxMessageSize);
 					if (messageLength > maxMessageSize) {
 						if (first) {
 							throw new ResponseException(ErrorType.RequestEntityTooLarge);
 						}
-						logger.debug("finalizing message only ids");
+						//logger.debug("finalizing message only ids");
 						current = current.substring(0, current.length() - 1) + "]}";
-						logger.debug("finale messagesize only ids: " + current.getBytes().length);
+						//logger.debug("finale messagesize only ids: " + current.getBytes().length);
 						toSend.add(current);
 						current = base + "\"" + id + "\",";
 						if (zip) {
@@ -377,9 +377,9 @@ public class MicroServiceUtils {
 						current += ",";
 						first = true;
 					} else if (messageLength == maxMessageSize) {
-						logger.debug("finalizing message only ids");
+						//logger.debug("finalizing message only ids");
 						current = current.substring(0, current.length() - 1) + "]}";
-						logger.debug("finale messagesize only ids: " + current.getBytes().length);
+						//logger.debug("finale messagesize only ids: " + current.getBytes().length);
 						toSend.add(current);
 						current = base;
 						first = true;
@@ -405,9 +405,9 @@ public class MicroServiceUtils {
 					first = false;
 				}
 				if (current.length() != base.length()) {
-					logger.debug("finalizing message only ids");
+					//logger.debug("finalizing message only ids");
 					current = current.substring(0, current.length() - 1) + "]}";
-					logger.debug("finale messagesize only ids: " + current.getBytes().length);
+					//logger.debug("finale messagesize only ids: " + current.getBytes().length);
 					toSend.add(current);
 					current = base;
 				}
@@ -415,7 +415,7 @@ public class MicroServiceUtils {
 				throw new ResponseException(ErrorType.InternalError, "Failed to compress prevpayload");
 			}
 			toSend.forEach(entry -> {
-				logger.debug("sending entry of size: " + entry.getBytes().length);
+				//logger.debug("sending entry of size: " + entry.getBytes().length);
 				emitter.sendAndForget(entry);
 			});
 

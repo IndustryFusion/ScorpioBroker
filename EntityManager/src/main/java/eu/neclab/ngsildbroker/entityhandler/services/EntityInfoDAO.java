@@ -41,6 +41,7 @@ import jakarta.inject.Singleton;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -93,9 +94,76 @@ public class EntityInfoDAO {
 			return client.preparedQuery("SELECT * FROM NGSILD_UPSERTBATCH($1, $2)").execute(tuple).onItem()
 					.transform(rows -> {
 						long stop = System.currentTimeMillis();
-						logger.info("LOOOOOOOOK:" + ((stop - start) * 1000));
+						logger.info("LOOOOOOOOK:" + ((stop - start) / 1000));
 						return rows.iterator().next().getJsonObject(0).getMap();
 					});
+		});
+	}
+
+	public Uni<Map<String, Object>> newBatchUpsertEntity(BatchRequest request, boolean doReplace) {
+		return clientManager.getClient(request.getTenant(), true).onItem().transformToUni(client -> {
+			List<Map<String, Object>> entities = Lists.newArrayList();
+			request.getPayload().values().forEach(entityList -> {
+				entities.addAll(entityList);
+			});
+			Tuple tuple = Tuple.of(new JsonArray(entities));
+			String sql = """
+					with a as (SELECT jsonb_array_elements($1) as entity),
+					b as (SELECT a.entity->>'@id' as id, a.entity as entity, entity.entity as old_entity from a left join entity on a.entity->>'@id' = entity.id),
+					c as (insert into entity(id, e_types, entity) select b.id, ARRAY(SELECT jsonb_array_elements_text(b.entity->'@type')), b.entity from b ON CONFLICT (id) DO UPDATE SET id = EXCLUDED.id,e_types = EXCLUDED.e_types,entity = EXCLUDED.entity RETURNING id, entity, (xmax = 0) AS inserted)
+					select c.id, c.inserted, c.entity, b.old_entity from c left join b on c.id = b.id;
+					""";
+			long start = System.currentTimeMillis();
+			return client.preparedQuery(sql).execute(tuple).onItem().transform(rows -> {
+				long stop = System.currentTimeMillis();
+				Map<String, Object> result = new HashMap<>(1);
+				ArrayList<Map<String, Object>> success = new ArrayList<>(rows.size());
+				result.put("success", success);
+				rows.forEach(row -> {
+					Map<String, Object> tmp = new HashMap<>(4);
+					tmp.put("id", row.getString(0));
+					tmp.put("updated", !row.getBoolean(1));
+					tmp.put("old", row.getJsonObject(4).getMap());
+					tmp.put("new", row.getJsonObject(3).getMap());
+					success.add(tmp);
+				});
+				logger.info("LOOOOOOOOK:" + ((stop - start) / 1000));
+				return result;
+			});
+		});
+	}
+
+	public Uni<Map<String, Object>> newBatchProcessingBatchUpsertEntity(BatchRequest request, boolean doReplace) {
+		return clientManager.getClient(request.getTenant(), true).onItem().transformToUni(client -> {
+			List<Tuple> tuples = new ArrayList<>();
+			request.getPayload().entrySet().forEach(entry -> {
+				entry.getValue().forEach(entity -> {
+					tuples.add(Tuple.of(entry.getKey(), new JsonObject(entity)));
+				});
+			});
+
+			String sql = """
+					with b as (SELECT id, $2 as entity, entity.entity as old_entity from entity where id = $1),
+					c as (insert into entity(id, e_types, entity) select b.id, ARRAY(SELECT jsonb_array_elements_text(b.entity->'@type')), b.entity from b ON CONFLICT (id) DO UPDATE SET id = EXCLUDED.id,e_types = EXCLUDED.e_types,entity = EXCLUDED.entity RETURNING id, entity, (xmax = 0) AS inserted)
+					select c.id, c.inserted, c.entity, b.old_entity from c left join b on c.id = b.id;
+					""";
+			long start = System.currentTimeMillis();
+			return client.preparedQuery(sql).executeBatch(tuples).onItem().transform(rows -> {
+				long stop = System.currentTimeMillis();
+				Map<String, Object> result = new HashMap<>(1);
+				ArrayList<Map<String, Object>> success = new ArrayList<>(rows.size());
+				result.put("success", success);
+				rows.forEach(row -> {
+					Map<String, Object> tmp = new HashMap<>(4);
+					tmp.put("id", row.getString(0));
+					tmp.put("updated", !row.getBoolean(1));
+					tmp.put("old", row.getJsonObject(4).getMap());
+					tmp.put("new", row.getJsonObject(3).getMap());
+					success.add(tmp);
+				});
+				logger.info("LOOOOOOOOK:" + ((stop - start) / 1000));
+				return result;
+			});
 		});
 	}
 

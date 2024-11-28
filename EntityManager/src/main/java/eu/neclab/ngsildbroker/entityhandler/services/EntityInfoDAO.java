@@ -69,9 +69,11 @@ public class EntityInfoDAO {
 				entities.addAll(entityList);
 			});
 			Tuple tuple = Tuple.of(new JsonArray(entities));
-
+			long start = System.currentTimeMillis();
 			return client.preparedQuery("SELECT * FROM NGSILD_CREATEBATCH($1)").execute(tuple).onItem()
 					.transform(rows -> {
+						long stop = System.currentTimeMillis();
+						System.out.println(stop - start);
 						return rows.iterator().next().getJsonObject(0).getMap();
 					}).onFailure().recoverWithUni(e -> {
 						if (e instanceof PgException pge) {

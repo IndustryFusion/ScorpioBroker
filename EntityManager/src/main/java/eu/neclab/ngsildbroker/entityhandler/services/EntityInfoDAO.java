@@ -70,7 +70,7 @@ public class EntityInfoDAO {
 			});
 			Tuple tuple = Tuple.of(new JsonArray(entities));
 			String sql = """
-					with a as (SELECT entity, entity->'@id' as id, ARRAY(SELECT jsonb_array_elements_text(b.entity->'@type')) as e_types FROM jsonb_array_elements($1) as entity) 
+					with a as (SELECT entity, entity->'@id' as id, ARRAY(SELECT jsonb_array_elements_text(entity->'@type')) as e_types FROM jsonb_array_elements($1) as entity) 
 					insert into entity(id, e_types, entity) select a.id, a.e_types, a.entity from a ON CONFLICT(id) DO NOTHING RETURNING id, (xmax = 0) AS inserted;  
 					""";
 
@@ -191,8 +191,11 @@ public class EntityInfoDAO {
 				entities.addAll(entityList);
 			});
 			Tuple tuple = Tuple.of(new JsonArray(entities), request.isNoOverwrite());
+			long start = System.currentTimeMillis();
 			return client.preparedQuery("SELECT * FROM NGSILD_APPENDBATCH($1, $2)").execute(tuple).onItem()
 					.transform(rows -> {
+						long stop = System.currentTimeMillis();
+						System.out.println(stop - start);
 						return rows.iterator().next().getJsonObject(0).getMap();
 					});
 		});
@@ -200,8 +203,11 @@ public class EntityInfoDAO {
 
 	public Uni<Map<String, Object>> batchDeleteEntity(String tenant, List<String> entityIds) {
 		return clientManager.getClient(tenant, true).onItem().transformToUni(client -> {
+			long start = System.currentTimeMillis();
 			return client.preparedQuery("SELECT * FROM NGSILD_DELETEBATCH($1)")
 					.execute(Tuple.of(new JsonArray(entityIds))).onItem().transform(rows -> {
+						long stop = System.currentTimeMillis();
+						System.out.println(stop - start);
 						return rows.iterator().next().getJsonObject(0).getMap();
 					});
 		});

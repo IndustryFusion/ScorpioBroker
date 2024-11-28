@@ -69,6 +69,46 @@ public class EntityInfoDAO {
 				entities.addAll(entityList);
 			});
 			Tuple tuple = Tuple.of(new JsonArray(entities));
+			String sql = """
+					with a as (SELECT entity, entity->'@id' as id, ARRAY(SELECT jsonb_array_elements_text(b.entity->'@type')) as e_types FROM jsonb_array_elements($1) as entity) 
+					insert into entity(id, e_types, entity) select a.id, a.e_types, a.entity from a ON CONFLICT(id) DO NOTHING RETURNING id, (xmax = 0) AS inserted;  
+					""";
+
+			long start = System.currentTimeMillis();
+			return client.preparedQuery(sql).execute(tuple).onItem()
+					.transform(rows -> {
+						Map<String, Object> result = new HashMap<>(2);
+						ArrayList<String> success = new ArrayList<>();
+						ArrayList<Map<String, Object>> fails = new ArrayList<>();
+						result.put("success", success);
+						result.put("failure", fails);
+						rows.forEach(row -> {
+							if(row.getBoolean(1)) {
+								success.add(row.getString(0));
+							}else {
+								Map<String, String> map = new HashMap<>(1);
+								map.put(row.getString(0), AppConstants.SQL_ALREADY_EXISTS);
+							}
+						});
+						long stop = System.currentTimeMillis();
+						System.out.println(stop - start);
+						return result;
+					}).onFailure().recoverWithUni(e -> {
+						if (e instanceof PgException pge) {
+							logger.error(pge.getDetail());
+						}
+						logger.error("Failed to store entities in batch create.", e);
+						return Uni.createFrom().failure(e);
+					});
+		});
+	}
+	public Uni<Map<String, Object>> oldbatchCreateEntity(BatchRequest request) {
+		return clientManager.getClient(request.getTenant(), true).onItem().transformToUni(client -> {
+			List<Map<String, Object>> entities = Lists.newArrayList();
+			request.getPayload().values().forEach(entityList -> {
+				entities.addAll(entityList);
+			});
+			Tuple tuple = Tuple.of(new JsonArray(entities));
 			long start = System.currentTimeMillis();
 			return client.preparedQuery("SELECT * FROM NGSILD_CREATEBATCH($1)").execute(tuple).onItem()
 					.transform(rows -> {

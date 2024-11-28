@@ -13,6 +13,8 @@ import eu.neclab.ngsildbroker.commons.exceptions.ResponseException;
 import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.pgclient.PgException;
 
+import org.apache.fury.Fury;
+import org.apache.fury.config.Language;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +45,7 @@ import java.util.zip.DeflaterOutputStream;
 @Singleton
 public class MicroServiceUtils {
 	private final static Logger logger = LoggerFactory.getLogger(MicroServiceUtils.class);
+	private final static Fury fury = Fury.builder().withLanguage(Language.JAVA).build(); 
 
 	@ConfigProperty(name = "scorpio.gatewayurl")
 	String gatewayUrl;
@@ -78,11 +81,11 @@ public class MicroServiceUtils {
 	}
 
 	public static void serializeAndSplitObjectAndEmit(Object obj, int maxMessageSize, MutinyEmitter<String> emitter,
-			ObjectMapper objectMapper) throws ResponseException {
+			ObjectMapper objectMapper1) throws ResponseException {
 		if (obj instanceof BaseRequest br) {
 			String base;
 			try {
-				base = objectMapper.writeValueAsString(br);
+				base = objectMapper1.writeValueAsString(br);
 			} catch (JsonProcessingException e) {
 				logger.error("Failed to serialize object", e);
 				throw new ResponseException(ErrorType.InternalError, "Failed to serialize object");
@@ -103,24 +106,24 @@ public class MicroServiceUtils {
 					String serializedPrevpayload;
 					String id = entry.getKey();
 					for (int i = 0; i < entry.getValue().size(); i++) {
-						try {
-							serializedPayload = objectMapper.writeValueAsString(entry.getValue().get(i));
-						} catch (JsonProcessingException e) {
-							logger.error("Failed to serialize object", e);
-							throw new ResponseException(ErrorType.InternalError, "Failed to serialize object");
-						}
+//						try {
+							serializedPayload = base64Encoder.encodeToString(fury.serialize(entry.getValue().get(i)));
+//						} catch (JsonProcessingException e) {
+//							logger.error("Failed to serialize object", e);
+//							throw new ResponseException(ErrorType.InternalError, "Failed to serialize object");
+//						}
 						if (prevPayload != null) {
 							List<Map<String, Object>> prev = prevPayload.get(id);
 							if (prev != null) {
 								if (i < prev.size()) {
 									Map<String, Object> prevValue = prev.get(i);
-									try {
-										serializedPrevpayload = objectMapper.writeValueAsString(prevValue);
-									} catch (JsonProcessingException e) {
-										logger.error("Failed to serialize object", e);
-										throw new ResponseException(ErrorType.InternalError,
-												"Failed to serialize object");
-									}
+//									try {
+										serializedPrevpayload = base64Encoder.encodeToString(fury.serialize(prevValue));
+//									} catch (JsonProcessingException e) {
+//										logger.error("Failed to serialize object", e);
+//										throw new ResponseException(ErrorType.InternalError,
+//												"Failed to serialize object");
+//									}
 								} else {
 									serializedPrevpayload = "null";
 								}
@@ -242,12 +245,13 @@ public class MicroServiceUtils {
 					String serializedPrevpayload;
 					String id = entry.getKey();
 					for (Map<String, Object> mapEntry : entry.getValue()) {
-						try {
-							serializedPrevpayload = objectMapper.writeValueAsString(mapEntry);
-						} catch (JsonProcessingException e) {
-							logger.error("Failed to serialize object", e);
-							throw new ResponseException(ErrorType.InternalError, "Failed to serialize object");
-						}
+//						try {
+							serializedPrevpayload = base64Encoder.encodeToString(fury.serialize(mapEntry));
+							
+//						} catch (JsonProcessingException e) {
+//							logger.error("Failed to serialize object", e);
+//							throw new ResponseException(ErrorType.InternalError, "Failed to serialize object");
+//						}
 
 						if (zip) {
 
@@ -422,7 +426,7 @@ public class MicroServiceUtils {
 		} else {
 			String data;
 			try {
-				data = objectMapper.writeValueAsString(obj);
+				data = objectMapper1.writeValueAsString(obj);
 			} catch (JsonProcessingException e) {
 				throw new ResponseException(ErrorType.InternalError, "Failed to serialize object");
 			}

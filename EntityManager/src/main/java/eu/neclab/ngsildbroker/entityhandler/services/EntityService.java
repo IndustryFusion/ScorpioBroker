@@ -1,6 +1,9 @@
 package eu.neclab.ngsildbroker.entityhandler.services;
 
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Base64.Decoder;
+import java.util.Base64.Encoder;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,6 +15,8 @@ import java.util.Set;
 
 import io.vertx.mutiny.core.MultiMap;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.fury.Fury;
+import org.apache.fury.config.Language;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.OnOverflow;
@@ -20,9 +25,11 @@ import org.locationtech.spatial4j.shape.Shape;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jsonldjava.core.Context;
 import com.github.jsonldjava.core.JsonLDService;
+import com.github.jsonldjava.utils.JsonUtils;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -1388,7 +1395,7 @@ public class EntityService {
 
 					}
 					if (!request.getPayload().isEmpty()) {
-						//logger.debug("Upsert batch request sending to kafka " + request.getIds());
+						// logger.debug("Upsert batch request sending to kafka " + request.getIds());
 						try {
 							MicroServiceUtils.serializeAndSplitObjectAndEmit(request, messageSize, entityEmitter,
 									objectMapper);
@@ -2076,6 +2083,236 @@ public class EntityService {
 	public Uni<Void> updateValueField(String tenant, String id, String type, String attribId, String datasetId,
 			Map<String, Object> expandedValue) {
 		return entityDAO.updateValueField(tenant, id, attribId, datasetId, expandedValue);
+	}
+
+	public static void main(String[] args) throws Exception {
+		List<Map<String, Object>> test = Lists.newArrayList();
+		for (int i = 0; i < 200; i++) {
+
+			Map<String, Object> entity = (Map<String, Object>) JsonUtils.fromString("{\r\n"
+					+ "    \"https://uri.etsi.org/ngsi-ld/default-context/battery\": [\r\n" + "      {\r\n"
+					+ "        \"https://uri.etsi.org/ngsi-ld/observedAt\": [\r\n" + "          {\r\n"
+					+ "            \"@type\": \"https://uri.etsi.org/ngsi-ld/DateTime\",\r\n"
+					+ "            \"@value\": \"2016-08-22T10:18:16Z\"\r\n" + "          }\r\n" + "        ],\r\n"
+					+ "        \"@type\": [\r\n" + "          \"https://uri.etsi.org/ngsi-ld/Property\"\r\n"
+					+ "        ],\r\n" + "        \"https://uri.etsi.org/ngsi-ld/hasValue\": [\r\n" + "          {\r\n"
+					+ "            \"@value\": 0.81\r\n" + "          }\r\n" + "        ]\r\n" + "      }\r\n"
+					+ "    ],\r\n" + "    \"https://uri.etsi.org/ngsi-ld/default-context/bearing\": [\r\n"
+					+ "      {\r\n" + "        \"https://uri.etsi.org/ngsi-ld/observedAt\": [\r\n" + "          {\r\n"
+					+ "            \"@type\": \"https://uri.etsi.org/ngsi-ld/DateTime\",\r\n"
+					+ "            \"@value\": \"2016-08-22T10:18:16Z\"\r\n" + "          }\r\n" + "        ],\r\n"
+					+ "        \"@type\": [\r\n" + "          \"https://uri.etsi.org/ngsi-ld/Property\"\r\n"
+					+ "        ],\r\n" + "        \"https://uri.etsi.org/ngsi-ld/unitCode\": [\r\n" + "          {\r\n"
+					+ "            \"@value\": \"DD\"\r\n" + "          }\r\n" + "        ],\r\n"
+					+ "        \"https://uri.etsi.org/ngsi-ld/hasValue\": [\r\n" + "          {\r\n"
+					+ "            \"@value\": 80\r\n" + "          }\r\n" + "        ]\r\n" + "      }\r\n"
+					+ "    ],\r\n" + "    \"https://uri.etsi.org/ngsi-ld/default-context/currentOperative\": [\r\n"
+					+ "      {\r\n" + "        \"@type\": [\r\n"
+					+ "          \"https://uri.etsi.org/ngsi-ld/Property\"\r\n" + "        ],\r\n"
+					+ "        \"https://uri.etsi.org/ngsi-ld/hasValue\": [\r\n" + "          {\r\n"
+					+ "            \"https://uri.etsi.org/ngsi-ld/default-context/givenName\": [\r\n"
+					+ "              {\r\n" + "                \"@value\": \"John Smith\"\r\n" + "              }\r\n"
+					+ "            ],\r\n"
+					+ "            \"https://uri.etsi.org/ngsi-ld/default-context/jobTitle\": [\r\n"
+					+ "              {\r\n" + "                \"@value\": \"Ambulance Operator\"\r\n"
+					+ "              }\r\n" + "            ]\r\n" + "          }\r\n" + "        ]\r\n" + "      }\r\n"
+					+ "    ],\r\n" + "    \"https://uri.etsi.org/ngsi-ld/default-context/currentStatus\": [\r\n"
+					+ "      {\r\n" + "        \"@type\": [\r\n"
+					+ "          \"https://uri.etsi.org/ngsi-ld/Property\"\r\n" + "        ],\r\n"
+					+ "        \"https://uri.etsi.org/ngsi-ld/hasValue\": [\r\n" + "          {\r\n"
+					+ "            \"@value\": \"finished\"\r\n" + "          }\r\n" + "        ]\r\n" + "      }\r\n"
+					+ "    ],\r\n" + "    \"https://uri.etsi.org/ngsi-ld/default-context/dataProvider\": [\r\n"
+					+ "      {\r\n" + "        \"@type\": [\r\n"
+					+ "          \"https://uri.etsi.org/ngsi-ld/Property\"\r\n" + "        ],\r\n"
+					+ "        \"https://uri.etsi.org/ngsi-ld/hasValue\": [\r\n" + "          {\r\n"
+					+ "            \"@value\": \"https://provider.example.com\"\r\n" + "          }\r\n"
+					+ "        ]\r\n" + "      }\r\n" + "    ],\r\n"
+					+ "    \"https://uri.etsi.org/ngsi-ld/default-context/fleetVehicle\": [\r\n" + "      {\r\n"
+					+ "        \"https://uri.etsi.org/ngsi-ld/hasObject\": [\r\n" + "          {\r\n"
+					+ "            \"@id\": \"urn:ngsi-ld:FleetVehicle:84c6a3a8-5aa6-11e8-bedc-27e105edd16f\"\r\n"
+					+ "          }\r\n" + "        ],\r\n" + "        \"@type\": [\r\n"
+					+ "          \"https://uri.etsi.org/ngsi-ld/Relationship\"\r\n" + "        ]\r\n" + "      }\r\n"
+					+ "    ],\r\n" + "    \"https://uri.etsi.org/ngsi-ld/default-context/fleetVehicleOperation\": [\r\n"
+					+ "      {\r\n" + "        \"https://uri.etsi.org/ngsi-ld/hasObject\": [\r\n" + "          {\r\n"
+					+ "            \"@id\": \"urn:ngsi-ld:FleetVehicleOperation:a4f0a07a-5aa6-11e8-b70f-4b9d36e53d7b\"\r\n"
+					+ "          }\r\n" + "        ],\r\n" + "        \"@type\": [\r\n"
+					+ "          \"https://uri.etsi.org/ngsi-ld/Relationship\"\r\n" + "        ]\r\n" + "      }\r\n"
+					+ "    ],\r\n"
+					+ "    \"@id\": \"urn:ngsi-ld:FleetVehicleStatus:16ea1c5c-5aa6-11e8-8144-4b82063ca31c\",\r\n"
+					+ "    \"https://uri.etsi.org/ngsi-ld/default-context/inRestrictedArea\": [\r\n" + "      {\r\n"
+					+ "        \"@type\": [\r\n" + "          \"https://uri.etsi.org/ngsi-ld/Property\"\r\n"
+					+ "        ],\r\n" + "        \"https://uri.etsi.org/ngsi-ld/hasValue\": [\r\n" + "          {\r\n"
+					+ "            \"@value\": true\r\n" + "          }\r\n" + "        ]\r\n" + "      }\r\n"
+					+ "    ],\r\n" + "    \"https://uri.etsi.org/ngsi-ld/default-context/lastFuellingAmount\": [\r\n"
+					+ "      {\r\n" + "        \"https://uri.etsi.org/ngsi-ld/observedAt\": [\r\n" + "          {\r\n"
+					+ "            \"@type\": \"https://uri.etsi.org/ngsi-ld/DateTime\",\r\n"
+					+ "            \"@value\": \"2016-08-22T10:18:16Z\"\r\n" + "          }\r\n" + "        ],\r\n"
+					+ "        \"@type\": [\r\n" + "          \"https://uri.etsi.org/ngsi-ld/Property\"\r\n"
+					+ "        ],\r\n" + "        \"https://uri.etsi.org/ngsi-ld/unitCode\": [\r\n" + "          {\r\n"
+					+ "            \"@value\": \"LTR\"\r\n" + "          }\r\n" + "        ],\r\n"
+					+ "        \"https://uri.etsi.org/ngsi-ld/hasValue\": [\r\n" + "          {\r\n"
+					+ "            \"@value\": 95\r\n" + "          }\r\n" + "        ]\r\n" + "      }\r\n"
+					+ "    ],\r\n" + "    \"https://uri.etsi.org/ngsi-ld/default-context/lastKnownPosition\": [\r\n"
+					+ "      {\r\n" + "        \"@type\": [\r\n"
+					+ "          \"https://uri.etsi.org/ngsi-ld/GeoProperty\"\r\n" + "        ],\r\n"
+					+ "        \"https://uri.etsi.org/ngsi-ld/hasValue\": [\r\n" + "          {\r\n"
+					+ "            \"https://purl.org/geojson/vocab#coordinates\": [\r\n" + "              {\r\n"
+					+ "                \"@list\": [\r\n" + "                  {\r\n"
+					+ "                    \"@value\": -104.99404\r\n" + "                  },\r\n"
+					+ "                  {\r\n" + "                    \"@value\": 39.75621\r\n"
+					+ "                  }\r\n" + "                ]\r\n" + "              }\r\n" + "            ],\r\n"
+					+ "            \"@type\": [\r\n" + "              \"https://purl.org/geojson/vocab#Point\"\r\n"
+					+ "            ]\r\n" + "          }\r\n" + "        ]\r\n" + "      }\r\n" + "    ],\r\n"
+					+ "    \"https://uri.etsi.org/ngsi-ld/default-context/lastKnownPositionUpdatedAt\": [\r\n"
+					+ "      {\r\n" + "        \"@type\": [\r\n"
+					+ "          \"https://uri.etsi.org/ngsi-ld/Property\"\r\n" + "        ],\r\n"
+					+ "        \"https://uri.etsi.org/ngsi-ld/hasValue\": [\r\n" + "          {\r\n"
+					+ "            \"@type\": \"https://uri.etsi.org/ngsi-ld/DateTime\",\r\n"
+					+ "            \"@value\": \"2016-08-28T10:18:16Z\"\r\n" + "          }\r\n" + "        ]\r\n"
+					+ "      }\r\n" + "    ],\r\n"
+					+ "    \"https://uri.etsi.org/ngsi-ld/default-context/mileageFromOdometer\": [\r\n" + "      {\r\n"
+					+ "        \"https://uri.etsi.org/ngsi-ld/observedAt\": [\r\n" + "          {\r\n"
+					+ "            \"@type\": \"https://uri.etsi.org/ngsi-ld/DateTime\",\r\n"
+					+ "            \"@value\": \"2016-08-22T10:18:16Z\"\r\n" + "          }\r\n" + "        ],\r\n"
+					+ "        \"@type\": [\r\n" + "          \"https://uri.etsi.org/ngsi-ld/Property\"\r\n"
+					+ "        ],\r\n" + "        \"https://uri.etsi.org/ngsi-ld/unitCode\": [\r\n" + "          {\r\n"
+					+ "            \"@value\": \"SMI\"\r\n" + "          }\r\n" + "        ],\r\n"
+					+ "        \"https://uri.etsi.org/ngsi-ld/hasValue\": [\r\n" + "          {\r\n"
+					+ "            \"@value\": 18756\r\n" + "          }\r\n" + "        ]\r\n" + "      }\r\n"
+					+ "    ],\r\n" + "    \"https://uri.etsi.org/ngsi-ld/default-context/restFuelAmount\": [\r\n"
+					+ "      {\r\n" + "        \"https://uri.etsi.org/ngsi-ld/observedAt\": [\r\n" + "          {\r\n"
+					+ "            \"@type\": \"https://uri.etsi.org/ngsi-ld/DateTime\",\r\n"
+					+ "            \"@value\": \"2016-08-22T10:18:16Z\"\r\n" + "          }\r\n" + "        ],\r\n"
+					+ "        \"@type\": [\r\n" + "          \"https://uri.etsi.org/ngsi-ld/Property\"\r\n"
+					+ "        ],\r\n" + "        \"https://uri.etsi.org/ngsi-ld/unitCode\": [\r\n" + "          {\r\n"
+					+ "            \"@value\": \"LTR\"\r\n" + "          }\r\n" + "        ],\r\n"
+					+ "        \"https://uri.etsi.org/ngsi-ld/hasValue\": [\r\n" + "          {\r\n"
+					+ "            \"@value\": 28\r\n" + "          }\r\n" + "        ]\r\n" + "      }\r\n"
+					+ "    ],\r\n" + "    \"https://uri.etsi.org/ngsi-ld/default-context/source\": [\r\n"
+					+ "      {\r\n" + "        \"@type\": [\r\n"
+					+ "          \"https://uri.etsi.org/ngsi-ld/Property\"\r\n" + "        ],\r\n"
+					+ "        \"https://uri.etsi.org/ngsi-ld/hasValue\": [\r\n" + "          {\r\n"
+					+ "            \"@value\": \"https://source.example.com\"\r\n" + "          }\r\n" + "        ]\r\n"
+					+ "      }\r\n" + "    ],\r\n" + "    \"https://uri.etsi.org/ngsi-ld/default-context/speed\": [\r\n"
+					+ "      {\r\n" + "        \"https://uri.etsi.org/ngsi-ld/observedAt\": [\r\n" + "          {\r\n"
+					+ "            \"@type\": \"https://uri.etsi.org/ngsi-ld/DateTime\",\r\n"
+					+ "            \"@value\": \"2016-08-22T10:18:16Z\"\r\n" + "          }\r\n" + "        ],\r\n"
+					+ "        \"@type\": [\r\n" + "          \"https://uri.etsi.org/ngsi-ld/Property\"\r\n"
+					+ "        ],\r\n" + "        \"https://uri.etsi.org/ngsi-ld/unitCode\": [\r\n" + "          {\r\n"
+					+ "            \"@value\": \"KMH\"\r\n" + "          }\r\n" + "        ],\r\n"
+					+ "        \"https://uri.etsi.org/ngsi-ld/hasValue\": [\r\n" + "          {\r\n"
+					+ "            \"@value\": 60\r\n" + "          }\r\n" + "        ]\r\n" + "      }\r\n"
+					+ "    ],\r\n" + "    \"@type\": [\r\n"
+					+ "      \"https://uri.etsi.org/ngsi-ld/default-context/FleetVehicleStatus\"\r\n" + "    ]\r\n"
+					+ "  }").await().indefinitely();
+			test.add(entity);
+		}
+		Fury fury = Fury.builder().withLanguage(Language.JAVA)
+				// Allow to deserialize objects unknown types,
+				// more flexible but less secure.
+				// .withSecureMode(false)
+				.build();
+		Encoder encoder = Base64.getEncoder();
+		Decoder decoder = Base64.getDecoder();
+		Runtime runtime = Runtime.getRuntime();
+		ObjectMapper om = new ObjectMapper();
+		double sum = 0;
+		String deserialized = null;
+		System.out.println("Before");
+		System.out.println(runtime.totalMemory());
+		for (int i = 0; i < 20; i++) {
+			long start = System.currentTimeMillis();
+			for(Map<String, Object> testentry: test) {
+				deserialized = om.writeValueAsString(testentry);
+			}
+			long stop = System.currentTimeMillis();
+			// System.out.println((stop - start));
+			sum += (stop - start);
+		}
+		System.out.println("serialize");
+		System.out.println(sum / 20);
+		sum = 0;
+		for (int i = 0; i < 100; i++) {
+			long start = System.currentTimeMillis();
+			for(Map<String, Object> testentry: test) {
+				deserialized = om.writeValueAsString(testentry);
+			}
+			long stop = System.currentTimeMillis();
+			sum += (stop - start);
+		}
+		System.out.println("serialize");
+		System.out.println(sum / 100);
+		System.out.println("After");
+		System.out.println(runtime.totalMemory());
+		sum = 0;
+		for (int i = 0; i < 20; i++) {
+			long start = System.currentTimeMillis();
+			for(int j = 0; j < 200; j++) {
+				Map list = om.readValue(deserialized, Map.class);	
+			}
+			long stop = System.currentTimeMillis();
+			
+			sum += (stop - start);
+		}
+		System.out.println("deserialize");
+		System.out.println(sum / 20);
+		sum = 0;
+		for (int i = 0; i < 100; i++) {
+			long start = System.currentTimeMillis();
+			for(int j = 0; j < 200; j++) {
+				Map list = om.readValue(deserialized, Map.class);	
+			}
+			long stop = System.currentTimeMillis();
+			sum += (stop - start);
+		}
+		System.out.println("deserialize");
+		System.out.println(sum / 100);
+
+		sum = 0;
+		deserialized = null;
+		for (int i = 0; i < 20; i++) {
+			long start = System.currentTimeMillis();
+			for(Map<String, Object> testentry: test) {
+				deserialized = encoder.encodeToString(fury.serialize(testentry));
+			}
+			long stop = System.currentTimeMillis();
+			sum += (stop - start);
+		}
+		System.out.println("serialize");
+		System.out.println(sum / 20);
+		sum = 0;
+		for (int i = 0; i < 100; i++) {
+			long start = System.currentTimeMillis();
+			for(Map<String, Object> testentry: test) {
+				deserialized = encoder.encodeToString(fury.serialize(testentry));
+			}
+			long stop = System.currentTimeMillis();
+			sum += (stop - start);
+		}
+		System.out.println("serialize");
+		System.out.println(sum / 100);
+		sum = 0;
+		for (int i = 0; i < 20; i++) {
+			long start = System.currentTimeMillis();
+			for(int j = 0; j < 200; j++) {
+				Map list = (Map) fury.deserialize(decoder.decode(deserialized));	
+			}
+			long stop = System.currentTimeMillis();
+			sum += (stop - start);
+		}
+		System.out.println("deserialize");
+		System.out.println(sum / 20);
+		sum = 0;
+		for (int i = 0; i < 100; i++) {
+			long start = System.currentTimeMillis();
+			for(int j = 0; j < 200; j++) {
+				Map list = (Map) fury.deserialize(decoder.decode(deserialized));	
+			}
+			long stop = System.currentTimeMillis();
+			sum += (stop - start);
+		}
+		System.out.println("deserialize");
+		System.out.println(sum / 100);
 	}
 
 }

@@ -53,6 +53,7 @@ public class MicroServiceUtils {
 	String contextServerUrl;
 
 	private static final Encoder base64Encoder = Base64.getEncoder();
+	private static final byte[] nullArray = {'n', 'u', 'l','l'};
 
 	@PostConstruct
 	void setup() {
@@ -108,12 +109,12 @@ public class MicroServiceUtils {
 				boolean first = true;
 				int lastSend = 0;
 				for (Entry<String, List<Map<String, Object>>> entry : payload.entrySet()) {
-					String serializedPayload;
-					String serializedPrevpayload;
-					String id = entry.getKey();
+					byte[] serializedPayload;
+					byte[] serializedPrevpayload;
+					byte[] id = entry.getKey().getBytes();
 					for (int i = 0; i < entry.getValue().size(); i++) {
 						try {
-							serializedPayload = objectMapper.writeValueAsString(entry.getValue().get(i));
+							serializedPayload = objectMapper.writeValueAsBytes(entry.getValue().get(i));
 						} catch (JsonProcessingException e) {
 							logger.error("Failed to serialize object", e);
 							throw new ResponseException(ErrorType.InternalError, "Failed to serialize object");
@@ -124,37 +125,37 @@ public class MicroServiceUtils {
 								if (i < prev.size()) {
 									Map<String, Object> prevValue = prev.get(i);
 									try {
-										serializedPrevpayload = objectMapper.writeValueAsString(prevValue);
+										serializedPrevpayload = objectMapper.writeValueAsBytes(prevValue);
 									} catch (JsonProcessingException e) {
 										logger.error("Failed to serialize object", e);
 										throw new ResponseException(ErrorType.InternalError,
 												"Failed to serialize object");
 									}
 								} else {
-									serializedPrevpayload = "null";
+									serializedPrevpayload = nullArray;
 								}
 							} else {
-								serializedPrevpayload = "null";
+								serializedPrevpayload = nullArray;
 							}
 						} else {
-							serializedPrevpayload = "null";
+							serializedPrevpayload = nullArray;
 						}
 
 						if (zip) {
 
 							try {
-								serializedPayload = base64Encoder.encodeToString(zip(serializedPayload));
+								serializedPayload = base64Encoder.encode(zip(serializedPayload));
 							} catch (IOException e) {
 								throw new ResponseException(ErrorType.InternalError, "Failed to compress prevpayload");
 							}
 							try {
-								serializedPrevpayload = base64Encoder.encodeToString(zip(serializedPrevpayload));
+								serializedPrevpayload = base64Encoder.encode(zip(serializedPrevpayload));
 							} catch (IOException e) {
 								throw new ResponseException(ErrorType.InternalError, "Failed to compress prevpayload");
 							}
 						}
-						int messageLength = current.length() * 2 + id.getBytes().length
-								+ serializedPayload.getBytes().length + serializedPrevpayload.getBytes().length + 18;
+						int messageLength = current.length() * 2 + id.length
+								+ serializedPayload.length + serializedPrevpayload.length + 18;
 						logger.debug("message size after adding payload would be " + messageLength);
 						if (messageLength > maxMessageSize) {
 							if (first) {
@@ -259,12 +260,12 @@ public class MicroServiceUtils {
 			} else if (prevPayload != null) {
 				boolean first = true;
 				for (Entry<String, List<Map<String, Object>>> entry : prevPayload.entrySet()) {
-					String serializedPayload = "null";
-					String serializedPrevpayload;
-					String id = entry.getKey();
+					byte[] serializedPayload = nullArray;
+					byte[] serializedPrevpayload;
+					byte[] id = entry.getKey().getBytes();
 					for (Map<String, Object> mapEntry : entry.getValue()) {
 						try {
-							serializedPrevpayload = objectMapper.writeValueAsString(mapEntry);
+							serializedPrevpayload = objectMapper.writeValueAsBytes(mapEntry);
 						} catch (JsonProcessingException e) {
 							logger.error("Failed to serialize object", e);
 							throw new ResponseException(ErrorType.InternalError, "Failed to serialize object");
@@ -273,18 +274,18 @@ public class MicroServiceUtils {
 						if (zip) {
 
 							try {
-								serializedPayload = base64Encoder.encodeToString(zip(serializedPayload));
+								serializedPayload = base64Encoder.encode(zip(serializedPayload));
 							} catch (IOException e) {
 								throw new ResponseException(ErrorType.InternalError, "Failed to compress prevpayload");
 							}
 							try {
-								serializedPrevpayload = base64Encoder.encodeToString(zip(serializedPrevpayload));
+								serializedPrevpayload = base64Encoder.encode(zip(serializedPrevpayload));
 							} catch (IOException e) {
 								throw new ResponseException(ErrorType.InternalError, "Failed to compress prevpayload");
 							}
 						}
-						int messageLength = current.length() * 2 + id.getBytes().length
-								+ serializedPayload.getBytes().length + serializedPrevpayload.getBytes().length + 18;
+						int messageLength = current.length() * 2 + id.length
+								+ serializedPayload.length + serializedPrevpayload.length + 18;
 						//logger.debug("message size after adding payload would be " + maxMessageSize);
 						if (messageLength > maxMessageSize) {
 							if (first) {
@@ -363,25 +364,25 @@ public class MicroServiceUtils {
 			} else if (br.getIds() != null) {
 				boolean first = true;
 				for (String entry : br.getIds()) {
-					String serializedPayload = "null";
-					String serializedPrevpayload = "null";
-					String id = entry;
+					byte[] serializedPayload = nullArray;
+					byte[] serializedPrevpayload = nullArray;
+					byte[] id = entry.getBytes();
 
 					if (zip) {
 
 						try {
-							serializedPayload = base64Encoder.encodeToString(zip(serializedPayload));
+							serializedPayload = base64Encoder.encode(zip(serializedPayload));
 						} catch (IOException e) {
 							throw new ResponseException(ErrorType.InternalError, "Failed to compress prevpayload");
 						}
 						try {
-							serializedPrevpayload = base64Encoder.encodeToString(zip(serializedPrevpayload));
+							serializedPrevpayload = base64Encoder.encode(zip(serializedPrevpayload));
 						} catch (IOException e) {
 							throw new ResponseException(ErrorType.InternalError, "Failed to compress prevpayload");
 						}
 					}
-					int messageLength = current.length() * 2 + id.getBytes().length
-							+ serializedPayload.getBytes().length + serializedPrevpayload.getBytes().length + 18;
+					int messageLength = current.length() * 2 + id.length
+							+ serializedPayload.length + serializedPrevpayload.length + 18;
 					//logger.debug("message size after adding payload would be " + maxMessageSize);
 					if (messageLength > maxMessageSize) {
 						if (first) {
@@ -473,10 +474,10 @@ public class MicroServiceUtils {
 
 	}
 
-	private static byte[] zip(String data) throws IOException {
+	private static byte[] zip(byte[] data) throws IOException {
 		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 		DeflaterOutputStream deflateOut = new DeflaterOutputStream(byteArrayOutputStream);
-		deflateOut.write(data.getBytes());
+		deflateOut.write(data);
 		deflateOut.flush();
 		deflateOut.close();
 		byte[] tmp = byteArrayOutputStream.toByteArray();

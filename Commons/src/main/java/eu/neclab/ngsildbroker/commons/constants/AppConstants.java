@@ -179,7 +179,7 @@ public class AppConstants {
 			.newHashMap(Map.of(INTERNAL_NULL_KEY, DB_REMOTE_HOST));
 	
 	public static final String TENANT_SERIALIZATION_CHAR = "a";
-	public static final char PAYLOAD_SERIALIZATION_CHAR = 'b';
+	public static final String PAYLOAD_SERIALIZATION_CHAR = "b";
 	public static final String PREVPAYLOAD_SERIALIZATION_CHAR = "c";
 	public static final String REQUESTTYPE_SERIALIZATION_CHAR = "d";
 	public static final String SENDTIMESTAMP_SERIALIZATION_CHAR = "e";

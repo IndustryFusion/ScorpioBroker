@@ -70,11 +70,11 @@ public class EntityInfoDAO {
 			});
 			Tuple tuple = Tuple.of(new JsonArray(entities));
 			String sql = """
-					with a as (SELECT entity, entity->'@id' as id, ARRAY(SELECT jsonb_array_elements_text(b.entity->'@type')) as e_types FROM jsonb_array_elements($1) as entity) 
+					with a as (SELECT entity, entity->'@id' as id, ARRAY(SELECT jsonb_array_elements_text(entity->'@type')) as e_types FROM jsonb_array_elements($1) as entity) 
 					insert into entity(id, e_types, entity) select a.id, a.e_types, a.entity from a ON CONFLICT(id) DO NOTHING RETURNING id, (xmax = 0) AS inserted;  
 					""";
 
-			long start = System.currentTimeMillis();
+			
 			return client.preparedQuery(sql).execute(tuple).onItem()
 					.transform(rows -> {
 						Map<String, Object> result = new HashMap<>(2);
@@ -90,8 +90,6 @@ public class EntityInfoDAO {
 								map.put(row.getString(0), AppConstants.SQL_ALREADY_EXISTS);
 							}
 						});
-						long stop = System.currentTimeMillis();
-						System.out.println(stop - start);
 						return result;
 					}).onFailure().recoverWithUni(e -> {
 						if (e instanceof PgException pge) {
@@ -109,11 +107,8 @@ public class EntityInfoDAO {
 				entities.addAll(entityList);
 			});
 			Tuple tuple = Tuple.of(new JsonArray(entities));
-			long start = System.currentTimeMillis();
 			return client.preparedQuery("SELECT * FROM NGSILD_CREATEBATCH($1)").execute(tuple).onItem()
 					.transform(rows -> {
-						long stop = System.currentTimeMillis();
-						System.out.println(stop - start);
 						return rows.iterator().next().getJsonObject(0).getMap();
 					}).onFailure().recoverWithUni(e -> {
 						if (e instanceof PgException pge) {
@@ -132,11 +127,8 @@ public class EntityInfoDAO {
 				entities.addAll(entityList);
 			});
 			Tuple tuple = Tuple.of(new JsonArray(entities), doReplace);
-			long start = System.currentTimeMillis();
 			return client.preparedQuery("SELECT * FROM NGSILD_UPSERTBATCH($1, $2)").execute(tuple).onItem()
 					.transform(rows -> {
-						long stop = System.currentTimeMillis();
-						logger.info("LOOOOOOOOK:" + ((stop - start) / 1000));
 						return rows.iterator().next().getJsonObject(0).getMap();
 					});
 		});

@@ -81,15 +81,22 @@ public class MicroServiceUtils {
 			ObjectMapper objectMapper) throws ResponseException {
 		if (obj instanceof BaseRequest br) {
 			String base;
+			
 			try {
 				base = objectMapper.writeValueAsString(br);
 			} catch (JsonProcessingException e) {
 				logger.error("Failed to serialize object", e);
 				throw new ResponseException(ErrorType.InternalError, "Failed to serialize object");
 			}
+			StringBuilder tmp = new StringBuilder(base.length() + 5);
 			//logger.debug("attempting to send request with max message size " + maxMessageSize);
-			base = base.substring(0, base.length() - 1);
-			base += ",\"" + AppConstants.PAYLOAD_SERIALIZATION_CHAR + "\":[";
+			tmp.append(base);
+			tmp.setCharAt(tmp.length() - 1, ',');
+			tmp.append('"');
+			tmp.append(AppConstants.PAYLOAD_SERIALIZATION_CHAR);
+			tmp.append("\":[");
+			
+			base = tmp.toString();
 			int baseLength = base.length();
 			StringBuilder current = new StringBuilder(1024);
 			current.append(base);

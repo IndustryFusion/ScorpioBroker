@@ -70,36 +70,35 @@ public class EntityInfoDAO {
 			});
 			Tuple tuple = Tuple.of(new JsonArray(entities));
 			String sql = """
-					with a as (SELECT entity, entity->'@id' as id, ARRAY(SELECT jsonb_array_elements_text(entity->'@type')) as e_types FROM jsonb_array_elements($1) as entity) 
-					insert into entity(id, e_types, entity) select a.id, a.e_types, a.entity from a ON CONFLICT(id) DO NOTHING RETURNING id, (xmax = 0) AS inserted;  
+					with a as (SELECT entity, entity->'@id' as id, ARRAY(SELECT jsonb_array_elements_text(entity->'@type')) as e_types FROM jsonb_array_elements($1) as entity)
+					insert into entity(id, e_types, entity) select a.id, a.e_types, a.entity from a ON CONFLICT(id) DO NOTHING RETURNING id, (xmax = 0) AS inserted;
 					""";
 
-			
-			return client.preparedQuery(sql).execute(tuple).onItem()
-					.transform(rows -> {
-						Map<String, Object> result = new HashMap<>(2);
-						ArrayList<String> success = new ArrayList<>();
-						ArrayList<Map<String, Object>> fails = new ArrayList<>();
-						result.put("success", success);
-						result.put("failure", fails);
-						rows.forEach(row -> {
-							if(row.getBoolean(1)) {
-								success.add(row.getString(0));
-							}else {
-								Map<String, String> map = new HashMap<>(1);
-								map.put(row.getString(0), AppConstants.SQL_ALREADY_EXISTS);
-							}
-						});
-						return result;
-					}).onFailure().recoverWithUni(e -> {
-						if (e instanceof PgException pge) {
-							logger.error(pge.getDetail());
-						}
-						logger.error("Failed to store entities in batch create.", e);
-						return Uni.createFrom().failure(e);
-					});
+			return client.preparedQuery(sql).execute(tuple).onItem().transform(rows -> {
+				Map<String, Object> result = new HashMap<>(2);
+				ArrayList<String> success = new ArrayList<>();
+				ArrayList<Map<String, Object>> fails = new ArrayList<>();
+				result.put("success", success);
+				result.put("failure", fails);
+				rows.forEach(row -> {
+					if (row.getBoolean(1)) {
+						success.add(row.getString(0));
+					} else {
+						Map<String, String> map = new HashMap<>(1);
+						map.put(row.getString(0), AppConstants.SQL_ALREADY_EXISTS);
+					}
+				});
+				return result;
+			}).onFailure().recoverWithUni(e -> {
+				if (e instanceof PgException pge) {
+					logger.error(pge.getDetail());
+				}
+				logger.error("Failed to store entities in batch create.", e);
+				return Uni.createFrom().failure(e);
+			});
 		});
 	}
+
 	public Uni<Map<String, Object>> batchCreateEntity(BatchRequest request) {
 		return clientManager.getClient(request.getTenant(), true).onItem().transformToUni(client -> {
 			List<Map<String, Object>> entities = Lists.newArrayList();
@@ -141,19 +140,22 @@ public class EntityInfoDAO {
 				entities.addAll(entityList);
 			});
 			Tuple tuple = Tuple.of(new JsonArray(entities));
-			String sql = """
-					with a as (SELECT jsonb_array_elements($1) as entity),
-					b as (SELECT a.entity->>'@id' as id, a.entity as entity, entity.entity as old_entity from a left join entity on a.entity->>'@id' = entity.id),
-					c as (insert into entity(id, e_types, entity) select b.id, ARRAY(SELECT jsonb_array_elements_text(b.entity->'@type')), b.entity from b ON CONFLICT (id) DO UPDATE SET id = EXCLUDED.id,e_types = ARRAY(SELECT DISTINCT UNNEST(entity.e_types || EXCLUDED.e_types)),entity =
-					""";
+			StringBuilder sql = new StringBuilder(
+					"""
+							with a as (SELECT jsonb_array_elements($1) as entity),
+							b as (SELECT a.entity->>'@id' as id, a.entity as entity, entity.entity as old_entity from a left join entity on a.entity->>'@id' = entity.id),
+							c as (insert into entity(id, e_types, entity) select b.id, ARRAY(SELECT jsonb_array_elements_text(b.entity->'@type')), b.entity from b ON CONFLICT (id) DO UPDATE SET id = EXCLUDED.id,e_types = ARRAY(SELECT DISTINCT UNNEST(entity.e_types || EXCLUDED.e_types)),entity =
+							""");
 			if (doReplace) {
-				sql += "EXCLUDED.entity ";
+				sql.append("EXCLUDED.entity ");
 			} else {
-				sql += "jsonb_set((EXCLUDED.entity || entity.entity), '{@type}', (SELECT jsonb_agg(DISTINCT x) FROM UNNEST(entity.e_types || EXCLUDED.e_types) as x)) ";
+				sql.append(
+						"jsonb_set((EXCLUDED.entity || entity.entity), '{@type}', (SELECT jsonb_agg(DISTINCT x) FROM UNNEST(entity.e_types || EXCLUDED.e_types) as x)) ");
 			}
-			sql += "RETURNING id, entity, (xmax = 0) AS inserted) select c.id, c.inserted, c.entity, b.old_entity from c left join b on c.id = b.id;";
+			sql.append(
+					"RETURNING id, entity, (xmax = 0) AS inserted) select c.id, c.inserted, c.entity, b.old_entity from c left join b on c.id = b.id;");
 
-			return client.preparedQuery(sql).execute(tuple).onItem().transform(rows -> {
+			return client.preparedQuery(sql.toString()).execute(tuple).onItem().transform(rows -> {
 				Map<String, Object> result = new HashMap<>(2);
 				ArrayList<Map<String, Object>> success = new ArrayList<>(rows.size());
 				result.put("success", success);
@@ -253,28 +255,29 @@ public class EntityInfoDAO {
 	 */
 	public Uni<Map<String, Object>> deleteAttribute(DeleteAttributeRequest request) {
 		return clientManager.getClient(request.getTenant(), false).onItem().transformToUni(client -> {
-			String sql = """
+			StringBuilder sql = new StringBuilder("""
 					WITH old_entity AS (
 					    SELECT ENTITY
 					    FROM ENTITY
 					    WHERE id = $2
-					)""";
+					)""");
 			Tuple tuple;
-			sql += "UPDATE ENTITY SET ENTITY=";
+			sql.append("UPDATE ENTITY SET ENTITY=");
 			if (request.isDeleteAll()) {
-				sql = "ENTITY - $1 WHERE id=$2 AND ENTITY ? $1";
+				sql.append("ENTITY - $1 WHERE id=$2 AND ENTITY ? $1");
 				tuple = Tuple.of(request.getAttribName(), request.getFirstId());
 			} else if (request.getDatasetId() != null) {
-				sql += "NGSILD_DELETEATTRIB(ENTITY, $1, $2) WHERE id=$3 AND ENTITY @> '{\"$1\": [{\""
-						+ NGSIConstants.NGSI_LD_DATA_SET_ID + "\": \"$2\"}]}'";
+				sql.append("NGSILD_DELETEATTRIB(ENTITY, $1, $2) WHERE id=$3 AND ENTITY @> '{\"$1\": [{\""
+						+ NGSIConstants.NGSI_LD_DATA_SET_ID + "\": \"$2\"}]}'");
 				tuple = Tuple.of(request.getAttribName(), request.getDatasetId(), request.getFirstId());
 			} else {
-				sql += "NGSILD_DELETEATTRIB(ENTITY, $1, null) WHERE id=$2 AND ENTITY ? $1 AND EXISTS (SELECT jsonb_array_elements FROM jsonb_array_elements(ENTITY->$1) WHERE NOT jsonb_array_elements ? '"
-						+ NGSIConstants.NGSI_LD_DATA_SET_ID + "')";
+				sql.append(
+						"NGSILD_DELETEATTRIB(ENTITY, $1, null) WHERE id=$2 AND ENTITY ? $1 AND EXISTS (SELECT jsonb_array_elements FROM jsonb_array_elements(ENTITY->$1) WHERE NOT jsonb_array_elements ? '"
+								+ NGSIConstants.NGSI_LD_DATA_SET_ID + "')");
 				tuple = Tuple.of(request.getAttribName(), request.getFirstId());
 			}
-			sql += " RETURNING (SELECT ENTITY FROM old_entity) AS old_entity;";
-			return client.preparedQuery(sql).execute(tuple).onFailure().retry().atMost(3).onItem()
+			sql.append(" RETURNING (SELECT ENTITY FROM old_entity) AS old_entity;");
+			return client.preparedQuery(sql.toString()).execute(tuple).onFailure().retry().atMost(3).onItem()
 					.transformToUni(rows -> {
 						if (rows.size() == 0) {
 							return Uni.createFrom().failure(new ResponseException(ErrorType.NotFound));
@@ -342,46 +345,51 @@ public class EntityInfoDAO {
 			int dollar = 2;
 			Tuple tuple = Tuple.tuple();
 
-			String sql = """
+			StringBuilder sql = new StringBuilder("""
 					WITH old_entity AS (
 					    SELECT ENTITY
 					    FROM ENTITY
 					    WHERE ID = '%s'
-					)""".formatted(request.getFirstId());
-			sql += """
-					,json_data AS (
-					    SELECT jsonb_strip_nulls(jsonb_object_agg(
-					               key,
-					               CASE
-					                   WHEN jsonb_typeof(value->0) = 'object' and (value->0)?'https://uri.etsi.org/ngsi-ld/createdAt' THEN
-					                       jsonb_set(value, '{0,https://uri.etsi.org/ngsi-ld/createdAt}', old_entity.entity->key->0->'https://uri.etsi.org/ngsi-ld/createdAt', true)
-					                   ELSE
-					                       value
-					               END
-					           )) AS modified_data
-					    FROM JSONB_EACH($1::jsonb)
-					    CROSS JOIN old_entity
-					)""";
+					)""".formatted(request.getFirstId()));
+			sql.append(
+					"""
+							,json_data AS (
+							    SELECT jsonb_strip_nulls(jsonb_object_agg(
+							               key,
+							               CASE
+							                   WHEN jsonb_typeof(value->0) = 'object' and (value->0)?'https://uri.etsi.org/ngsi-ld/createdAt' THEN
+							                       jsonb_set(value, '{0,https://uri.etsi.org/ngsi-ld/createdAt}', old_entity.entity->key->0->'https://uri.etsi.org/ngsi-ld/createdAt', true)
+							                   ELSE
+							                       value
+							               END
+							           )) AS modified_data
+							    FROM JSONB_EACH($1::jsonb)
+							    CROSS JOIN old_entity
+							)""");
 			tuple.addJsonObject(new JsonObject(payload));
-			sql += " UPDATE ENTITY SET ";
+			sql.append(" UPDATE ENTITY SET ");
 			if (types != null) {
-				sql += "e_types = ARRAY(SELECT DISTINCT UNNEST(e_types || $2)), ENTITY = (jsonb_set(ENTITY, '{@type}', array_to_json(Array(SELECT DISTINCT UNNEST(e_types || $2))) ::jsonb) || ((select * from json_data)-'https://uri.etsi.org/ngsi-ld/createdAt')::jsonb)";
+				sql.append(
+						"e_types = ARRAY(SELECT DISTINCT UNNEST(e_types || $2)), ENTITY = (jsonb_set(ENTITY, '{@type}', array_to_json(Array(SELECT DISTINCT UNNEST(e_types || $2))) ::jsonb) || ((select * from json_data)-'https://uri.etsi.org/ngsi-ld/createdAt')::jsonb)");
 				dollar = 3;
 				tuple.addArrayOfString(((List<String>) types).toArray(new String[0]));
 			} else {
-				sql += " ENTITY = (ENTITY || (select * from json_data)-'https://uri.etsi.org/ngsi-ld/createdAt') ";
+				sql.append(" ENTITY = (ENTITY || (select * from json_data)-'https://uri.etsi.org/ngsi-ld/createdAt') ");
 			}
 			if (!toBeRemoved.isEmpty()) {
 				for (String remove : toBeRemoved) {
-					sql += " - '$" + dollar + "'";
+					sql.append(" - '$");
+					sql.append(dollar);
+					sql.append('\'');
 					dollar++;
 					tuple.addString(remove);
 				}
 			}
-			sql += "WHERE ID = $" + dollar;
+			sql.append("WHERE ID = $");
+			sql.append(dollar);
 			tuple.addString(request.getFirstId());
-			sql += " RETURNING (SELECT ENTITY FROM old_entity) AS old_entity;";
-			return client.preparedQuery(sql).execute(tuple).onFailure().recoverWithUni(e -> {
+			sql.append(" RETURNING (SELECT ENTITY FROM old_entity) AS old_entity;");
+			return client.preparedQuery(sql.toString()).execute(tuple).onFailure().recoverWithUni(e -> {
 				return Uni.createFrom().failure(new ResponseException(ErrorType.NotFound));
 			}).onItem().transformToUni(rows -> {
 				if (rows.rowCount() == 0) {
@@ -445,34 +453,35 @@ public class EntityInfoDAO {
 
 			Tuple tuple = Tuple.tuple();
 			tuple.addString(request.getFirstId());
-			String sql;
-			sql = "WITH a as(SELECT entity FROM entity WHERE id =$1), b as (UPDATE ENTITY SET ";
+			StringBuilder sql = new StringBuilder(
+					"WITH a as(SELECT entity FROM entity WHERE id =$1), b as (UPDATE ENTITY SET ");
 			if (types != null) {
-				sql += "e_types = ARRAY(SELECT DISTINCT UNNEST(e_types || $2)), ";
+				sql.append("e_types = ARRAY(SELECT DISTINCT UNNEST(e_types || $2)), ");
 				if (noOverwrite) {
-					sql += "ENTITY = (($3::jsonb - 'https://uri.etsi.org/ngsi-ld/createdAt') || jsonb_set(ENTITY, '{@type}', array_to_json(Array(SELECT DISTINCT UNNEST(e_types || $2))) ::jsonb))";
+					sql.append(
+							"ENTITY = (($3::jsonb - 'https://uri.etsi.org/ngsi-ld/createdAt') || jsonb_set(ENTITY, '{@type}', array_to_json(Array(SELECT DISTINCT UNNEST(e_types || $2))) ::jsonb))");
 				} else {
-					sql += "ENTITY = (jsonb_set(ENTITY, '{@type}', array_to_json(Array(SELECT DISTINCT UNNEST(e_types || $2))) ::jsonb) || ($3::jsonb - 'https://uri.etsi.org/ngsi-ld/createdAt'))";
+					sql.append(
+							"ENTITY = (jsonb_set(ENTITY, '{@type}', array_to_json(Array(SELECT DISTINCT UNNEST(e_types || $2))) ::jsonb) || ($3::jsonb - 'https://uri.etsi.org/ngsi-ld/createdAt'))");
 				}
 
 				tuple.addArrayOfString(((List<String>) types).toArray(new String[0]));
 				tuple.addJsonObject(new JsonObject(payload));
 			} else {
 				if (noOverwrite) {
-					sql += " ENTITY = (($2::jsonb - 'https://uri.etsi.org/ngsi-ld/createdAt') || ENTITY) ";
+					sql.append(" ENTITY = (($2::jsonb - 'https://uri.etsi.org/ngsi-ld/createdAt') || ENTITY) ");
 				} else {
-					sql += " ENTITY = (ENTITY || ($2::jsonb - 'https://uri.etsi.org/ngsi-ld/createdAt')) ";
+					sql.append(" ENTITY = (ENTITY || ($2::jsonb - 'https://uri.etsi.org/ngsi-ld/createdAt')) ");
 				}
 				tuple.addJsonObject(new JsonObject(payload));
 			}
 
-			sql += "WHERE ID = $1";
+			sql.append("WHERE ID = $1");
 			// if (noOverwrite) {
-			sql += " RETURNING ENTITY) SELECT a.entity as old, b.entity as new FROM a, b;";
+			sql.append(" RETURNING ENTITY) SELECT a.entity as old, b.entity as new FROM a, b;");
 			// }
-			logger.debug(sql);
 
-			return client.preparedQuery(sql).execute(tuple).onItem().transformToUni(rows -> {
+			return client.preparedQuery(sql.toString()).execute(tuple).onItem().transformToUni(rows -> {
 				if (rows.size() == 0) {
 					return Uni.createFrom().failure(new ResponseException(ErrorType.NotFound));
 				}
@@ -631,38 +640,56 @@ public class EntityInfoDAO {
 		return clientManager.getClient(tenant, false).onItem().transformToUni(client -> {
 			Tuple t = Tuple.tuple();
 
-			String sql = "WITH JSON_DATA AS	(SELECT JSONB_ARRAY_ELEMENTS(ENTITY -> $1) WITH ORDINALITY AS ELEM FROM ENTITY WHERE ID=$2), "
-					+ "ELEMENTS AS (SELECT ELEM.ELEM, ELEM.ORDINALITY - 1 AS INDEX FROM JSON_DATA ELEM WHERE ELEM.ELEM ->> '"
-					+ NGSIConstants.NGSI_LD_DATA_SET_ID + "' ";
+			StringBuilder sql = new StringBuilder(
+					"WITH JSON_DATA AS	(SELECT JSONB_ARRAY_ELEMENTS(ENTITY -> $1) WITH ORDINALITY AS ELEM FROM ENTITY WHERE ID=$2), ELEMENTS AS (SELECT ELEM.ELEM, ELEM.ORDINALITY - 1 AS INDEX FROM JSON_DATA ELEM WHERE ELEM.ELEM ->> '");
+			sql.append(NGSIConstants.NGSI_LD_DATA_SET_ID);
+			sql.append("' ");
+
 			t.addString(attribId);
 			t.addString(id);
 			if (datasetId == null) {
-				sql += "IS NULL";
+				sql.append("IS NULL");
 			} else {
-				sql += "= $3";
+				sql.append("= $3");
 				t.addString(datasetId);
 			}
 
-			sql += ") UPDATE ENTITY SET ENTITY=CASE WHEN entity#>>'{$1,@type,0}' = '" + NGSIConstants.NGSI_LD_PROPERTY
-					+ "' THEN JSONB_SET(ENTITY, ARRAY[$1,ELEMENTS.INDEX, '" + NGSIConstants.NGSI_LD_HAS_VALUE
-					+ "']::text[],$4,false) " + "WHEN entity#>>'{$1,@type,0}' = '" + NGSIConstants.NGSI_LD_RELATIONSHIP
-					+ "' THEN JSONB_SET(ENTITY, ARRAY[$1,ELEMENTS.INDEX, '" + NGSIConstants.NGSI_LD_HAS_OBJECT
-					+ "']::text[],$4,false)" + "WHEN entity#>>'{$1,@type,0}' = '"
-					+ NGSIConstants.NGSI_LD_LISTRELATIONSHIP + "' THEN JSONB_SET(ENTITY, ARRAY[$1,ELEMENTS.INDEX, '"
-					+ NGSIConstants.NGSI_LD_HAS_OBJECT_LIST + "']::text[],$4,false)"
-					+ "WHEN entity#>>'{$1,@type,0}' = '" + NGSIConstants.NGSI_LD_ListProperty
-					+ "' THEN JSONB_SET(ENTITY, ARRAY[$1,ELEMENTS.INDEX, '" + NGSIConstants.NGSI_LD_HAS_LIST
-					+ "']::text[],$4,false)" + "WHEN entity#>>'{$1,@type,0}' = '" + NGSIConstants.NGSI_LD_LANGPROPERTY
-					+ "' THEN JSONB_SET(ENTITY, ARRAY[$1,ELEMENTS.INDEX, '" + NGSIConstants.NGSI_LD_HAS_LANGUAGE_MAP
-					+ "']::text[],$4,false)" + "WHEN entity#>>'{$1,@type,0}' = '" + NGSIConstants.NGSI_LD_VocabProperty
-					+ "' THEN JSONB_SET(ENTITY, ARRAY[$1,ELEMENTS.INDEX, '" + NGSIConstants.NGSI_LD_HAS_VOCAB
-					+ "']::text[],$4,false)" + "WHEN entity#>>'{$1,@type,0}' = '" + NGSIConstants.NGSI_LD_JSON_PROPERTY
-					+ "' THEN JSONB_SET(ENTITY, ARRAY[$1,ELEMENTS.INDEX, '" + NGSIConstants.NGSI_LD_HAS_JSON
-					+ "']::text[],$4,false)" + "WHEN entity#>>'{$1,@type,0}' = '" + NGSIConstants.NGSI_LD_GEOPROPERTY
-					+ "' THEN JSONB_SET(ENTITY, ARRAY[$1,ELEMENTS.INDEX, '" + NGSIConstants.NGSI_LD_HAS_VALUE
-					+ "']::text[],$4,false)" + "ELSE ENTITY end FROM ELEMENTS WHERE ENTITY.ID=$2";
+			sql.append(") UPDATE ENTITY SET ENTITY=CASE WHEN entity#>>'{$1,@type,0}' = '");
+			sql.append(NGSIConstants.NGSI_LD_PROPERTY);
+			sql.append("' THEN JSONB_SET(ENTITY, ARRAY[$1,ELEMENTS.INDEX, '");
+			sql.append(NGSIConstants.NGSI_LD_HAS_VALUE);
+			sql.append("']::text[],$4,false) " + "WHEN entity#>>'{$1,@type,0}' = '");
+			sql.append(NGSIConstants.NGSI_LD_RELATIONSHIP);
+			sql.append("' THEN JSONB_SET(ENTITY, ARRAY[$1,ELEMENTS.INDEX, '");
+			sql.append(NGSIConstants.NGSI_LD_HAS_OBJECT);
+			sql.append("']::text[],$4,false)" + "WHEN entity#>>'{$1,@type,0}' = '");
+			sql.append(NGSIConstants.NGSI_LD_LISTRELATIONSHIP);
+			sql.append("' THEN JSONB_SET(ENTITY, ARRAY[$1,ELEMENTS.INDEX, '");
+			sql.append(NGSIConstants.NGSI_LD_HAS_OBJECT_LIST);
+			sql.append("']::text[],$4,false)");
+			sql.append("WHEN entity#>>'{$1,@type,0}' = '");
+			sql.append(NGSIConstants.NGSI_LD_ListProperty);
+			sql.append("' THEN JSONB_SET(ENTITY, ARRAY[$1,ELEMENTS.INDEX, '");
+			sql.append(NGSIConstants.NGSI_LD_HAS_LIST);
+			sql.append("']::text[],$4,false)" + "WHEN entity#>>'{$1,@type,0}' = '");
+			sql.append(NGSIConstants.NGSI_LD_LANGPROPERTY);
+			sql.append("' THEN JSONB_SET(ENTITY, ARRAY[$1,ELEMENTS.INDEX, '");
+			sql.append(NGSIConstants.NGSI_LD_HAS_LANGUAGE_MAP);
+			sql.append("']::text[],$4,false)" + "WHEN entity#>>'{$1,@type,0}' = '");
+			sql.append(NGSIConstants.NGSI_LD_VocabProperty);
+			sql.append("' THEN JSONB_SET(ENTITY, ARRAY[$1,ELEMENTS.INDEX, '");
+			sql.append(NGSIConstants.NGSI_LD_HAS_VOCAB);
+			sql.append("']::text[],$4,false)" + "WHEN entity#>>'{$1,@type,0}' = '");
+			sql.append(NGSIConstants.NGSI_LD_JSON_PROPERTY);
+			sql.append("' THEN JSONB_SET(ENTITY, ARRAY[$1,ELEMENTS.INDEX, '");
+			sql.append(NGSIConstants.NGSI_LD_HAS_JSON);
+			sql.append("']::text[],$4,false)" + "WHEN entity#>>'{$1,@type,0}' = '");
+			sql.append(NGSIConstants.NGSI_LD_GEOPROPERTY);
+			sql.append("' THEN JSONB_SET(ENTITY, ARRAY[$1,ELEMENTS.INDEX, '");
+			sql.append(NGSIConstants.NGSI_LD_HAS_VALUE);
+			sql.append("']::text[],$4,false)" + "ELSE ENTITY end FROM ELEMENTS WHERE ENTITY.ID=$2");
 			t.addJsonObject(new JsonObject(value));
-			return client.preparedQuery(sql).execute(t).onItem().transformToUni(result -> {
+			return client.preparedQuery(sql.toString()).execute(t).onItem().transformToUni(result -> {
 
 				return Uni.createFrom().voidItem();
 			});

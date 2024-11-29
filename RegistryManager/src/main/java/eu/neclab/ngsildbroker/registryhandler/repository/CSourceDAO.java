@@ -271,9 +271,9 @@ public class CSourceDAO {
 				// }
 				// dollar++;
 			}
-			String sqlString = sql.toString();
-			logger.debug("SQL: " + sqlString);
-			logger.debug("Tuple: " + tuple.deepToString());
+			//String sqlString = sql.toString();
+			//logger.debug("SQL: " + sqlString);
+			//logger.debug("Tuple: " + tuple.deepToString());
 			return client.preparedQuery(sql.toString()).execute(tuple).onFailure().retry().atMost(3);
 		});
 

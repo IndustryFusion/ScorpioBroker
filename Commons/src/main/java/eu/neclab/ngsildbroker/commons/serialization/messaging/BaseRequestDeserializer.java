@@ -9,10 +9,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.InflaterOutputStream;
 
-import org.apache.fury.Fury;
-import org.apache.fury.config.FuryBuilder;
-import org.apache.fury.config.Language;
-
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -31,8 +27,7 @@ import eu.neclab.ngsildbroker.commons.tools.MicroServiceUtils;
 public class BaseRequestDeserializer extends JsonDeserializer<BaseRequest> {
 
 	private static final Decoder base64Decoder = Base64.getDecoder();
-	//private static final ObjectMapper mapper = new ObjectMapper();
-	private static final Fury fury = Fury.builder().withLanguage(Language.JAVA).build(); 
+	private static final ObjectMapper mapper = new ObjectMapper();
 	private static final TypeReference<Map<String, Object>> mapTypeRef = new TypeReference<Map<String, Object>>() {
 	};
 
@@ -100,7 +95,7 @@ public class BaseRequestDeserializer extends JsonDeserializer<BaseRequest> {
 				baos.flush();
 				byte[] payloadBytes = baos.toByteArray();
 				baos.close();
-				payload = (Map<String, Object>) fury.deserialize(base64Decoder.decode(payloadBytes));
+				payload = mapper.readValue(payloadBytes, mapTypeRef);
 				baos = new ByteArrayOutputStream();
 				inflater = new InflaterOutputStream(baos);
 
@@ -110,11 +105,11 @@ public class BaseRequestDeserializer extends JsonDeserializer<BaseRequest> {
 				baos.flush();
 				payloadBytes = baos.toByteArray();
 				baos.close();
-				prevPayload = (Map<String, Object>) fury.deserialize(base64Decoder.decode(payloadBytes));
+				prevPayload = mapper.readValue(payloadBytes, mapTypeRef);
 
 			} else {
-				payload = (Map<String, Object>) fury.deserialize(base64Decoder.decode(payloadArray.get(i + 1).textValue()));
-				prevPayload = (Map<String, Object>) fury.deserialize(base64Decoder.decode(payloadArray.get(i + 2).textValue()));
+				payload = mapper.convertValue(payloadArray.get(i + 1), mapTypeRef);
+				prevPayload = mapper.convertValue(payloadArray.get(i + 2), mapTypeRef);
 			}
 			if (payload != null) {
 				MicroServiceUtils.putIntoIdMap(payloadMap, entityId, payload);

@@ -14,13 +14,6 @@
 			<groupId>eu.neclab.ngsildbroker</groupId>
 			<artifactId>commons</artifactId>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.fury/fury-core -->
-		<dependency>
-			<groupId>org.apache.fury</groupId>
-			<artifactId>fury-core</artifactId>
-			<version>0.9.0</version>
-		</dependency>
-
 	</dependencies>
 	<profiles>
 		<profile>

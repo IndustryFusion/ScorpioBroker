@@ -62,7 +62,7 @@ public class EntityInfoDAO {
 
 	GeoJSONReader geoReader = new GeoJSONReader(JtsSpatialContext.GEO, new SpatialContextFactory());
 
-	public Uni<Map<String, Object>> batchCreateEntity(BatchRequest request) {
+	public Uni<Map<String, Object>> newbatchCreateEntity(BatchRequest request) {
 		return clientManager.getClient(request.getTenant(), true).onItem().transformToUni(client -> {
 			List<Map<String, Object>> entities = Lists.newArrayList();
 			request.getPayload().values().forEach(entityList -> {
@@ -100,7 +100,7 @@ public class EntityInfoDAO {
 					});
 		});
 	}
-	public Uni<Map<String, Object>> oldbatchCreateEntity(BatchRequest request) {
+	public Uni<Map<String, Object>> batchCreateEntity(BatchRequest request) {
 		return clientManager.getClient(request.getTenant(), true).onItem().transformToUni(client -> {
 			List<Map<String, Object>> entities = Lists.newArrayList();
 			request.getPayload().values().forEach(entityList -> {

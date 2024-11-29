@@ -163,41 +163,41 @@ public class MicroServiceUtils {
 
 							toSend.add(current);
 							current = base + "\"" + id + "\",";
-							if (zip) {
+//							if (zip) {
 								current += "\"";
-							}
+//							}
 							current += serializedPayload;
-							if (zip) {
+//							if (zip) {
 								current += "\"";
-							}
+//							}
 							current += ",";
-							if (zip) {
+//							if (zip) {
 								current += "\"";
-							}
+//							}
 							current += serializedPrevpayload;
-							if (zip) {
+//							if (zip) {
 								current += "\"";
-							}
+//							}
 							current += ",";
 							first = true;
 						} else if (messageLength == maxMessageSize) {
 							logger.debug("finalizing message");
 							current += "\"" + id + "\",";
-							if (zip) {
+//							if (zip) {
 								current += "\"";
-							}
+//							}
 							current += serializedPayload;
-							if (zip) {
+//							if (zip) {
 								current += "\"";
-							}
+//							}
 							current += ",";
-							if (zip) {
+//							if (zip) {
 								current += "\"";
-							}
+//							}
 							current += serializedPrevpayload;
-							if (zip) {
+//							if (zip) {
 								current += "\"";
-							}
+//							}
 							current += "]}";
 							logger.debug("finale messagesize: " + current.getBytes().length);
 							if (current.getBytes().length > maxMessageSize) {
@@ -208,21 +208,21 @@ public class MicroServiceUtils {
 							first = true;
 						} else {
 							current += "\"" + id + "\",";
-							if (zip) {
+//							if (zip) {
 								current += "\"";
-							}
+//							}
 							current += serializedPayload;
-							if (zip) {
+//							if (zip) {
 								current += "\"";
-							}
+//							}
 							current += ",";
-							if (zip) {
+//							if (zip) {
 								current += "\"";
-							}
+//							}
 							current += serializedPrevpayload;
-							if (zip) {
+//							if (zip) {
 								current += "\"";
-							}
+//							}
 							current += ",";
 						}
 					}
@@ -278,21 +278,21 @@ public class MicroServiceUtils {
 							//logger.debug("finale messagesize only prevpayload: " + current.getBytes().length);
 							toSend.add(current);
 							current = base + "\"" + id + "\",";
-							if (zip) {
+//							if (zip) {
 								current += "\"";
-							}
+//							}
 							current += serializedPayload;
-							if (zip) {
+//							if (zip) {
 								current += "\"";
-							}
+//							}
 							current += ",";
-							if (zip) {
+//							if (zip) {
 								current += "\"";
-							}
+//							}
 							current += serializedPrevpayload;
-							if (zip) {
+//							if (zip) {
 								current += "\"";
-							}
+//							}
 							current += ",";
 							first = true;
 						} else if (messageLength == maxMessageSize) {
@@ -304,21 +304,21 @@ public class MicroServiceUtils {
 							first = true;
 						} else {
 							current += "\"" + id + "\",";
-							if (zip) {
+//							if (zip) {
 								current += "\"";
-							}
+//							}
 							current += serializedPayload;
-							if (zip) {
+//							if (zip) {
 								current += "\"";
-							}
+//							}
 							current += ",";
-							if (zip) {
+//							if (zip) {
 								current += "\"";
-							}
+//							}
 							current += serializedPrevpayload;
-							if (zip) {
+//							if (zip) {
 								current += "\"";
-							}
+//							}
 							current += ",";
 						}
 					}
@@ -363,21 +363,21 @@ public class MicroServiceUtils {
 						//logger.debug("finale messagesize only ids: " + current.getBytes().length);
 						toSend.add(current);
 						current = base + "\"" + id + "\",";
-						if (zip) {
+//						if (zip) {
 							current += "\"";
-						}
+//						}
 						current += serializedPayload;
-						if (zip) {
+//						if (zip) {
 							current += "\"";
-						}
+//						}
 						current += ",";
-						if (zip) {
+//						if (zip) {
 							current += "\"";
-						}
+//						}
 						current += serializedPrevpayload;
-						if (zip) {
+//						if (zip) {
 							current += "\"";
-						}
+//						}
 						current += ",";
 						first = true;
 					} else if (messageLength == maxMessageSize) {
@@ -389,21 +389,21 @@ public class MicroServiceUtils {
 						first = true;
 					} else {
 						current += "\"" + id + "\",";
-						if (zip) {
+//						if (zip) {
 							current += "\"";
-						}
+//						}
 						current += serializedPayload;
-						if (zip) {
+//						if (zip) {
 							current += "\"";
-						}
+//						}
 						current += ",";
-						if (zip) {
+//						if (zip) {
 							current += "\"";
-						}
+//						}
 						current += serializedPrevpayload;
-						if (zip) {
+//						if (zip) {
 							current += "\"";
-						}
+//						}
 						current += ",";
 					}
 					first = false;

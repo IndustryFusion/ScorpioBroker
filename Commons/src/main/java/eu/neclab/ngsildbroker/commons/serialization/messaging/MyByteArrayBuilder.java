@@ -156,13 +156,18 @@ public class MyByteArrayBuilder extends OutputStream {
 	}
 
 	public synchronized byte[] finalizeMessage() {
-		return finalizeMessage(count)[0];
+		return finalizeMessage(count, false)[0];
 	}
 
-	public synchronized byte[][] finalizeMessage(int bytesNeeded) {
+	public synchronized byte[][] finalizeMessage(int bytesNeeded, boolean writeLeftOver) {
 
 		byte[] result = new byte[bytesNeeded + 1];
-		byte[] resultLeftOver = new byte[count - bytesNeeded];
+		byte[] resultLeftOver;
+		if (writeLeftOver) {
+			resultLeftOver = new byte[count - bytesNeeded];
+		} else {
+			resultLeftOver = null;
+		}
 		int offset = 0;
 		byte[] base;
 		if (!bufs.isEmpty()) {
@@ -187,20 +192,26 @@ public class MyByteArrayBuilder extends OutputStream {
 				leftOverStartOffset = length;
 			}
 			if (bytesNeeded <= 0) {
-				run = false;
-				int length = Math.max(0, b.length - leftOverStartOffset);
-				System.arraycopy(b, leftOverStartOffset, resultLeftOver, leftOverOffset, length);
-				leftOverOffset += length;
-				leftOverStartOffset = 0;
+				if (writeLeftOver) {
+					run = false;
+					int length = Math.max(0, b.length - leftOverStartOffset);
+					System.arraycopy(b, leftOverStartOffset, resultLeftOver, leftOverOffset, length);
+					leftOverOffset += length;
+					leftOverStartOffset = 0;
+				}
 			}
 		}
 		if (bytesNeeded <= 0) {
-			System.arraycopy(buf, 0, resultLeftOver, leftOverOffset, currentCount);
+			if (writeLeftOver) {
+				System.arraycopy(buf, 0, resultLeftOver, leftOverOffset, currentCount);
+			}
 		} else {
 			int length = Math.min(bytesNeeded, currentCount);
 			System.arraycopy(buf, 0, result, offset, length);
 			offset += length;
-			System.arraycopy(buf, length, resultLeftOver, leftOverOffset, currentCount - length);
+			if (writeLeftOver) {
+				System.arraycopy(buf, length, resultLeftOver, leftOverOffset, currentCount - length);
+			}
 		}
 		result[offset - 1] = ']';
 		result[offset] = '}';
@@ -214,7 +225,7 @@ public class MyByteArrayBuilder extends OutputStream {
 		if (lastItemRollback < 0) {
 			throw new IllegalArgumentException("Rollback point exceeds the total count");
 		}
-		byte[][] tmp = finalizeMessage(lastItemRollback);
+		byte[][] tmp = finalizeMessage(lastItemRollback, true);
 		byte[] result = tmp[0];
 		byte[] saved = tmp[1];
 		write(saved);

@@ -105,9 +105,9 @@ public class MicroServiceUtils {
 			} else if ((prevPayload == null || prevPayload.isEmpty())) {
 				initialLength = br.getPayload().size() * 3500 + 150;
 			} else if ((payload == null || payload.isEmpty())) {
-				initialLength = prevPayload.size() * 3500 + 150;
+				initialLength = prevPayload.size() * 8500 + 150;
 			} else {
-				initialLength = payload.size() * 7000 + 150;
+				initialLength = payload.size() * 17000 + 150;
 			}
 			if (initialLength > maxMessageSize) {
 				initialLength = maxMessageSize;
@@ -135,11 +135,12 @@ public class MicroServiceUtils {
 				int rollbackPoint;
 				for (Entry<String, List<Map<String, Object>>> entry : payload.entrySet()) {
 
-					byte[] id = entry.getKey().getBytes();
+					String id = entry.getKey();
+					byte[] idBytes = id.getBytes();
 					for (int i = 0; i < entry.getValue().size(); i++) {
 						rollbackPoint = current.size();
 						current.write('"');
-						current.write(id);
+						current.write(idBytes);
 						current.write('"');
 						current.write(',');
 						try {
@@ -200,18 +201,18 @@ public class MicroServiceUtils {
 						current.write(',');
 						int currentSize = current.size();
 						int messageLength = currentSize + FINALIZER_lENGTH;
-						logger.debug("message size after adding payload would be " + messageLength);
+						//logger.debug("message size after adding payload would be " + messageLength);
 						if (messageLength > maxMessageSize) {
 							if (first) {
 								throw new ResponseException(ErrorType.RequestEntityTooLarge);
 							}
-							logger.debug("finalizing message");
+							//logger.debug("finalizing message");
 							toSend.add(current.rollback(rollbackPoint, baseLength));
 							// current = current.substring(0, current.length() - 1) + "]}";
 
 						} else if (messageLength == maxMessageSize) {
 							toSend.add(current.finalizeMessage(baseLength));
-							logger.debug("finalizing message");
+							//logger.debug("finalizing message");
 						}
 					}
 					first = false;
@@ -224,11 +225,12 @@ public class MicroServiceUtils {
 				int rollbackPoint;
 				for (Entry<String, List<Map<String, Object>>> entry : prevPayload.entrySet()) {
 
-					byte[] id = entry.getKey().getBytes();
+					String id = entry.getKey();
+					byte[] idBytes = id.getBytes();
 					for (Map<String, Object> mapEntry : entry.getValue()) {
 						rollbackPoint = current.size();
 						current.write('"');
-						current.write(id);
+						current.write(idBytes);
 						current.write('"');
 						current.write(',');
 						if (zip) {
@@ -252,18 +254,18 @@ public class MicroServiceUtils {
 						current.write(',');
 						int currentSize = current.size();
 						int messageLength = currentSize + FINALIZER_lENGTH;
-						logger.debug("message size after adding payload would be " + messageLength);
+						//logger.debug("message size after adding payload would be " + messageLength);
 						if (messageLength > maxMessageSize) {
 							if (first) {
 								throw new ResponseException(ErrorType.RequestEntityTooLarge);
 							}
-							logger.debug("finalizing message");
+							//logger.debug("finalizing message");
 							toSend.add(current.rollback(rollbackPoint, baseLength));
 							// current = current.substring(0, current.length() - 1) + "]}";
 
 						} else if (messageLength == maxMessageSize) {
 							toSend.add(current.finalizeMessage(baseLength));
-							logger.debug("finalizing message");
+							//logger.debug("finalizing message");
 						}
 					}
 					first = false;
@@ -295,18 +297,18 @@ public class MicroServiceUtils {
 					// logger.debug("message size after adding payload would be " + maxMessageSize);
 					int currentSize = current.size();
 					int messageLength = currentSize + FINALIZER_lENGTH;
-					logger.debug("message size after adding payload would be " + messageLength);
+					//logger.debug("message size after adding payload would be " + messageLength);
 					if (messageLength > maxMessageSize) {
 						if (first) {
 							throw new ResponseException(ErrorType.RequestEntityTooLarge);
 						}
-						logger.debug("finalizing message");
+						//logger.debug("finalizing message");
 						toSend.add(current.rollback(rollbackPoint, baseLength));
 						// current = current.substring(0, current.length() - 1) + "]}";
 
 					} else if (messageLength == maxMessageSize) {
 						toSend.add(current.finalizeMessage(baseLength));
-						logger.debug("finalizing message");
+						//logger.debug("finalizing message");
 					}
 
 					first = false;
@@ -319,7 +321,6 @@ public class MicroServiceUtils {
 			}
 			toSend.forEach(entry -> {
 				// logger.debug("sending entry of size: " + entry.getBytes().length);
-				
 				emitter.sendAndForget(new String(entry));
 			});
 
@@ -338,7 +339,7 @@ public class MicroServiceUtils {
 	private static byte[] getZippedNullArray() {
 		if (ZIPPED_NULL_ARRAY == null) {
 			try {
-				byte[] tmp = base64Encoder.encode(zip(NULL_ARRAY));
+				byte[] tmp = base64Encoder.encode(zip("null".getBytes()));
 				ZIPPED_NULL_ARRAY = new byte[tmp.length + 2];
 				ZIPPED_NULL_ARRAY[0] = '"';
 				System.arraycopy(tmp, 0, ZIPPED_NULL_ARRAY, 1, tmp.length);

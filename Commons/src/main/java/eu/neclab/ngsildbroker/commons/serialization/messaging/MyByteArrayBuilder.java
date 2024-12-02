@@ -105,14 +105,14 @@ public class MyByteArrayBuilder extends OutputStream {
 	 * @param b the byte to be written.
 	 */
 	public synchronized void write(int b) {
-		if (currentCount + 1 > buf.length) {
+		if (currentCount >= buf.length) {
 			bufs.add(buf);
 			buf = new byte[growSize];
 			currentCount = 0;
 		}
-		buf[currentCount] = (byte) b;
+		buf[currentCount++] = (byte) b;
 		count += 1;
-		currentCount += 1;
+
 	}
 
 	/**
@@ -128,24 +128,25 @@ public class MyByteArrayBuilder extends OutputStream {
 	 *                                   {@code b.length - off}
 	 */
 	public synchronized void write(byte b[], int off, int len) {
-		Objects.checkFromIndexSize(off, len, b.length);
-		int sizeLeftAfterMEssage = buf.length - (currentCount + len + 1);
-		if (sizeLeftAfterMEssage < 0) {
-
-			System.arraycopy(b, off, buf, currentCount, len + sizeLeftAfterMEssage);
+		// Objects.checkFromIndexSize(off, len, b.length);
+		while (true) {
+			int max = buf.length - currentCount;
+			int toCopy = Math.min(max, len);
+			if (toCopy > 0) {
+				System.arraycopy(b, off, buf, currentCount, toCopy);
+				off += toCopy;
+				currentCount += toCopy;
+				count += toCopy;
+				len -= toCopy;
+			}
+			if (len <= 0)
+				break;
 			bufs.add(buf);
 			buf = new byte[growSize];
-			currentCount = -1 * sizeLeftAfterMEssage;
-			System.arraycopy(b, off + (len + sizeLeftAfterMEssage), buf, 0, currentCount);
-
-		} else {
-			System.arraycopy(b, off, buf, currentCount, len);
-			currentCount += len;
+			currentCount = 0;
 		}
-
-		count += len;
 	}
-	
+
 	public synchronized byte[] finalizeMessage(int baseRollbackpoint) {
 		byte[] result = new byte[count + 1];
 		int offset = 0;
@@ -154,9 +155,11 @@ public class MyByteArrayBuilder extends OutputStream {
 			System.arraycopy(b, 0, result, offset, b.length);
 			offset += b.length;
 		}
-		System.arraycopy(buf, 0, result, offset, currentCount);
-		result[result.length -2] = ']';
-		result[result.length -1] = '}';
+
+		System.arraycopy(buf, 0, result, offset, currentCount + 1);
+		offset += currentCount;
+		result[offset - 1] = ']';
+		result[offset] = '}';
 		if (!bufs.isEmpty()) {
 			buf = bufs.get(0);
 			bufs.clear();
@@ -389,7 +392,7 @@ public class MyByteArrayBuilder extends OutputStream {
 	public void reduceByOne() {
 		count--;
 		currentCount--;
-		
+
 	}
 
 }

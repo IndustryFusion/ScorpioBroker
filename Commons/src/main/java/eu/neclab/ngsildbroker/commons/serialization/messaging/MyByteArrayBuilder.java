@@ -116,7 +116,7 @@ public class MyByteArrayBuilder extends OutputStream {
 	 *
 	 * @param b the byte to be written.
 	 */
-	public synchronized void write(int b) {
+	public void write(int b) {
 		if (currentCount >= buf.length) {
 			growBuffer();
 		}
@@ -137,7 +137,7 @@ public class MyByteArrayBuilder extends OutputStream {
 	 *                                   negative, or {@code len} is greater than
 	 *                                   {@code b.length - off}
 	 */
-	public synchronized void write(byte b[], int off, int len) {
+	public void write(byte b[], int off, int len) {
 		// Objects.checkFromIndexSize(off, len, b.length);
 		while (true) {
 			int max = buf.length - currentCount;
@@ -155,11 +155,11 @@ public class MyByteArrayBuilder extends OutputStream {
 		}
 	}
 
-	public synchronized byte[] finalizeMessage() {
+	public byte[] finalizeMessage() {
 		return finalizeMessage(count)[0];
 	}
 
-	public synchronized byte[][] finalizeMessage(int bytesNeeded) {
+	public byte[][] finalizeMessage(int bytesNeeded) {
 
 		byte[] result = new byte[bytesNeeded + 1];
 		byte[] resultLeftOver = new byte[count - bytesNeeded];
@@ -209,7 +209,7 @@ public class MyByteArrayBuilder extends OutputStream {
 		return new byte[][] { result, resultLeftOver };
 	}
 
-	public synchronized byte[] rollback() {
+	public byte[] rollback() {
 
 		if (lastItemRollback < 0) {
 			throw new IllegalArgumentException("Rollback point exceeds the total count");
@@ -247,7 +247,7 @@ public class MyByteArrayBuilder extends OutputStream {
 	 * @throws NullPointerException if {@code out} is {@code null}.
 	 * @throws IOException          if an I/O error occurs.
 	 */
-	public synchronized void writeTo(OutputStream out) throws IOException {
+	public void writeTo(OutputStream out) throws IOException {
 		out.write(toByteArray(), 0, count);
 	}
 
@@ -259,7 +259,7 @@ public class MyByteArrayBuilder extends OutputStream {
 	 *
 	 * @see java.io.ByteArrayInputStream#count
 	 */
-	public synchronized void reset() {
+	public void reset() {
 		count = 0;
 		currentCount = 0;
 		currentItemCount = 0;
@@ -276,7 +276,7 @@ public class MyByteArrayBuilder extends OutputStream {
 	 * @return the current contents of this output stream, as a byte array.
 	 * @see java.io.ByteArrayOutputStream#size()
 	 */
-	public synchronized byte[] toByteArray() {
+	public byte[] toByteArray() {
 		byte[] result = new byte[count];
 		int offset = 0;
 		for (int i = 0; i < bufs.size(); i++) {
@@ -297,7 +297,7 @@ public class MyByteArrayBuilder extends OutputStream {
 	 *         bytes in this output stream.
 	 * @see java.io.ByteArrayOutputStream#count
 	 */
-	public synchronized int size() {
+	public int size() {
 		return count;
 	}
 
@@ -316,7 +316,7 @@ public class MyByteArrayBuilder extends OutputStream {
 	 * @return String decoded from the buffer's contents.
 	 * @since 1.1
 	 */
-	public synchronized String toString() {
+	public String toString() {
 
 		return new String(toByteArray());
 	}
@@ -353,7 +353,7 @@ public class MyByteArrayBuilder extends OutputStream {
 	 * @throws UnsupportedEncodingException If the named charset is not supported
 	 * @since 1.1
 	 */
-	public synchronized String toString(String charsetName) throws UnsupportedEncodingException {
+	public String toString(String charsetName) throws UnsupportedEncodingException {
 		return new String(toByteArray(), charsetName);
 	}
 
@@ -374,7 +374,7 @@ public class MyByteArrayBuilder extends OutputStream {
 	 * @return String decoded from the buffer's contents.
 	 * @since 10
 	 */
-	public synchronized String toString(Charset charset) {
+	public String toString(Charset charset) {
 		return new String(toByteArray(), charset);
 	}
 
@@ -404,7 +404,7 @@ public class MyByteArrayBuilder extends OutputStream {
 	 * @see java.io.ByteArrayOutputStream#toString()
 	 */
 	@Deprecated
-	public synchronized String toString(int hibyte) {
+	public String toString(int hibyte) {
 		return new String(toByteArray(), hibyte, 0, count);
 	}
 

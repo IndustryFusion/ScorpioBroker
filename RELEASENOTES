@@ -1,3 +1,11 @@
+RELEASE NOTES 5.0.4
+
+this release mainly address a performance and memory issue in the serialization and an issue with the upsert operation.
+Upsert was very slow compared to other methods and got an optimization to drastically improve performance and bring it more inline with the other methods.
+In general serialization for communication between microservices was very heavy on memory and has been fully rewritten.
+Memory usage in general should reduce by an order of magnitude.
+
+
 RELEASE NOTES 5.0.3
 
 Addresses 

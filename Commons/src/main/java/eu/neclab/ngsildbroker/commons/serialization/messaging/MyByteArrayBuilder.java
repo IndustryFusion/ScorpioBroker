@@ -31,8 +31,11 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+
+import jakarta.el.MethodNotFoundException;
 
 /**
  * This class implements an output stream in which the data is written into a
@@ -53,23 +56,29 @@ public class MyByteArrayBuilder extends OutputStream {
 	/**
 	 * The buffer where data is stored.
 	 */
-	protected byte buf[];
+	private byte buf[];
 	private List<byte[]> bufs = new ArrayList<>();
 
 	/**
 	 * The number of valid bytes in the buffer.
 	 */
-	protected int count;
+	private int count = 0;
 
-	protected int currentCount;
+	private int currentCount = 0;
 	private int growSize;
+	private int leftItems;
+	private int currentItemCount = 0;
+	private int lastItemRollback;
+	private int baseRollback;
+	private int maxMessageSize;
+	private int growTimes = 0;
 
 	/**
 	 * Creates a new {@code ByteArrayOutputStream}. The buffer capacity is initially
 	 * 32 bytes, though its size increases if necessary.
 	 */
 	public MyByteArrayBuilder() {
-		this(32);
+		throw new MethodNotFoundException();
 	}
 
 	/**
@@ -79,8 +88,11 @@ public class MyByteArrayBuilder extends OutputStream {
 	 * @param size the initial size.
 	 * @throws IllegalArgumentException if size is negative.
 	 */
-	public MyByteArrayBuilder(int size) {
-		this.growSize = size / 2;
+	public MyByteArrayBuilder(int size, int itemCount, int maxMessageSize) {
+		this.growSize = size;
+		this.leftItems = itemCount;
+		this.maxMessageSize = maxMessageSize;
+
 		if (size < 0) {
 			throw new IllegalArgumentException("Negative initial size: " + size);
 		}
@@ -106,9 +118,7 @@ public class MyByteArrayBuilder extends OutputStream {
 	 */
 	public synchronized void write(int b) {
 		if (currentCount >= buf.length) {
-			bufs.add(buf);
-			buf = new byte[growSize];
-			currentCount = 0;
+			growBuffer();
 		}
 		buf[currentCount++] = (byte) b;
 		count += 1;
@@ -141,60 +151,76 @@ public class MyByteArrayBuilder extends OutputStream {
 			}
 			if (len <= 0)
 				break;
-			bufs.add(buf);
-			buf = new byte[growSize];
-			currentCount = 0;
+			growBuffer();
 		}
 	}
 
-	public synchronized byte[] finalizeMessage(int baseRollbackpoint) {
-		byte[] result = new byte[count + 1];
-		int offset = 0;
-		for (int i = 0; i < bufs.size(); i++) {
-			byte[] b = bufs.get(i);
-			System.arraycopy(b, 0, result, offset, b.length);
-			offset += b.length;
-		}
+	public synchronized byte[] finalizeMessage() {
+		return finalizeMessage(count)[0];
+	}
 
-		System.arraycopy(buf, 0, result, offset, currentCount + 1);
-		offset += currentCount;
+	public synchronized byte[][] finalizeMessage(int bytesNeeded) {
+
+		byte[] result = new byte[bytesNeeded + 1];
+		byte[] resultLeftOver = new byte[count - bytesNeeded];
+		int offset = 0;
+		byte[] base;
+		if (!bufs.isEmpty()) {
+			base = bufs.get(0);
+		} else {
+			base = buf;
+		}
+		boolean run = true;
+		int leftOverOffset = 0;
+		Iterator<byte[]> it = bufs.iterator();
+		int leftOverStartOffset = 0;
+		while (it.hasNext()) {
+
+			byte[] b = it.next();
+			it.remove();
+
+			if (run) {
+				int length = Math.min(bytesNeeded, b.length);
+				System.arraycopy(b, 0, result, offset, length);
+				offset += length;
+				bytesNeeded -= length;
+				leftOverStartOffset = length;
+			}
+			if (bytesNeeded <= 0) {
+				run = false;
+				int length = Math.max(0, b.length - leftOverStartOffset);
+				System.arraycopy(b, leftOverStartOffset, resultLeftOver, leftOverOffset, length);
+				leftOverOffset += length;
+				leftOverStartOffset = 0;
+			}
+		}
+		if (bytesNeeded <= 0) {
+			System.arraycopy(buf, 0, resultLeftOver, leftOverOffset, currentCount);
+		} else {
+			int length = Math.min(bytesNeeded, currentCount);
+			System.arraycopy(buf, 0, result, offset, length);
+			offset += length;
+			System.arraycopy(buf, length, resultLeftOver, leftOverOffset, currentCount - length);
+		}
 		result[offset - 1] = ']';
 		result[offset] = '}';
-		if (!bufs.isEmpty()) {
-			buf = bufs.get(0);
-			bufs.clear();
-		}
-		currentCount = count = baseRollbackpoint;
-		return result;
+		buf = base;
+		currentCount = count = baseRollback;
+		return new byte[][] { result, resultLeftOver };
 	}
 
-	public synchronized byte[] rollback(int rollbackPoint, int baseRollbackpoint) {
-		int targetCount = count - rollbackPoint;
-		if (targetCount < 0) {
+	public synchronized byte[] rollback() {
+
+		if (lastItemRollback < 0) {
 			throw new IllegalArgumentException("Rollback point exceeds the total count");
 		}
+		byte[][] tmp = finalizeMessage(lastItemRollback);
+		byte[] result = tmp[0];
+		byte[] saved = tmp[1];
+		write(saved);
 
-		int bytesToRemove = count - targetCount;
-		byte[] removedArray = new byte[bytesToRemove];
-		int removedIndex = bytesToRemove;
+		return result;
 
-		// Remove bytes from the current buffer
-		int bytesFromCurrentBuf = Math.min(bytesToRemove, currentCount);
-		removedIndex -= bytesFromCurrentBuf;
-		System.arraycopy(buf, currentCount - bytesFromCurrentBuf, removedArray, removedIndex, bytesFromCurrentBuf);
-		count -= bytesFromCurrentBuf;
-
-		// Remove bytes from previous buffers if necessary
-		while (count > targetCount) {
-			buf = bufs.remove(bufs.size() - 1);
-			int bytesFromBuf = Math.min(buf.length, count - targetCount);
-			removedIndex -= bytesFromBuf;
-			System.arraycopy(buf, buf.length - bytesFromBuf, removedArray, removedIndex, bytesFromBuf);
-			count -= bytesFromBuf;
-		}
-		byte[] resultBytes = finalizeMessage(baseRollbackpoint);
-		write(removedArray);
-		return resultBytes;
 	}
 
 	/**
@@ -236,6 +262,7 @@ public class MyByteArrayBuilder extends OutputStream {
 	public synchronized void reset() {
 		count = 0;
 		currentCount = 0;
+		currentItemCount = 0;
 		if (!bufs.isEmpty()) {
 			buf = bufs.get(0);
 			bufs.clear();
@@ -393,6 +420,34 @@ public class MyByteArrayBuilder extends OutputStream {
 		count--;
 		currentCount--;
 
+	}
+
+	public void nextItem() {
+		this.lastItemRollback = count;
+		this.leftItems--;
+		this.currentItemCount++;
+	}
+
+	private void growBuffer() {
+		bufs.add(buf);
+		int grow;
+		growTimes++;
+		if (currentItemCount > 1) {
+			grow = ((growTimes * growSize) / (currentItemCount - 1)) * (leftItems + 1);
+		} else {
+			grow = growSize;
+		}
+		if (grow > maxMessageSize) {
+			grow = maxMessageSize;
+		}
+		buf = new byte[grow];
+
+		currentCount = 0;
+		currentItemCount = 1;
+	}
+
+	public void setBaseRollback() {
+		this.baseRollback = count;
 	}
 
 }

@@ -196,6 +196,7 @@ public class EntityInfoDAO {
 				sql.append(".entity, b");
 				sql.append(i);
 				sql.append(".old_entity from c");
+				sql.append(i);
 				sql.append(" left join b");
 				sql.append(i);
 				sql.append(" on c");

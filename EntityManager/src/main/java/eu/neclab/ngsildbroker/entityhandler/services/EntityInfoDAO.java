@@ -133,25 +133,84 @@ public class EntityInfoDAO {
 
 	public Uni<Map<String, Object>> batchUpsertEntity(BatchRequest request, boolean doReplace) {
 		return clientManager.getClient(request.getTenant(), true).onItem().transformToUni(client -> {
-			List<Map<String, Object>> entities = Lists.newArrayList();
-			request.getPayload().values().forEach(entityList -> {
-				entities.addAll(entityList);
-			});
-			Tuple tuple = Tuple.of(new JsonArray(entities));
-			StringBuilder sql = new StringBuilder(
-					"""
-							with a as (SELECT jsonb_array_elements($1) as entity),
-							b as (SELECT a.entity->>'@id' as id, a.entity as entity, entity.entity as old_entity from a left join entity on a.entity->>'@id' = entity.id),
-							c as (insert into entity(id, e_types, entity) select b.id, ARRAY(SELECT jsonb_array_elements_text(b.entity->'@type')), b.entity from b ON CONFLICT (id) DO UPDATE SET id = EXCLUDED.id,e_types = ARRAY(SELECT DISTINCT UNNEST(entity.e_types || EXCLUDED.e_types)),entity =
-							""");
-			if (doReplace) {
-				sql.append("EXCLUDED.entity ");
-			} else {
+
+			int i = 0;
+			boolean stop = false;
+			StringBuilder sql = new StringBuilder("with ");
+			Tuple tuple = Tuple.tuple();
+			while (!stop) {
+				stop = true;
+				List<Map<String, Object>> entities = Lists.newArrayList();
+				Iterator<List<Map<String, Object>>> it = request.getPayload().values().iterator();
+				while(it.hasNext()) {
+					List<Map<String, Object>> entry = it.next();
+					if (entry.size() > i) {
+						entities.add(entry.get(i));
+						stop = false;
+					}
+				}
+				tuple.addJsonArray(new JsonArray(entities));
+				
+				i++;
+				sql.append("a");
+				sql.append(i);
+				sql.append(" as (SELECT jsonb_array_elements($");
+				sql.append(i);
+				sql.append(") as entity), b");
+				sql.append(i);
+				sql.append(" as (SELECT a");
+				sql.append(i);
+				sql.append(".entity->>'@id' as id, a");
+				sql.append(i);
+				sql.append(".entity as entity, entity.entity as old_entity from a");
+				sql.append(i);
+				sql.append(" left join entity on a");
+				sql.append(i);
+				sql.append(".entity->>'@id' = entity.id), c");
+				sql.append(i);
+				sql.append(" as (insert into entity(id, e_types, entity) select b");
+				sql.append(i);
+				sql.append(".id, ARRAY(SELECT jsonb_array_elements_text(b");
+				sql.append(i);
+				sql.append(".entity->'@type')), b");
+				sql.append(i);
 				sql.append(
-						"jsonb_set((EXCLUDED.entity || entity.entity), '{@type}', (SELECT jsonb_agg(DISTINCT x) FROM UNNEST(entity.e_types || EXCLUDED.e_types) as x)) ");
+						".entity from b ON CONFLICT (id) DO UPDATE SET id = EXCLUDED.id,e_types = ARRAY(SELECT DISTINCT UNNEST(entity.e_types || EXCLUDED.e_types)),entity =");
+				if (doReplace) {
+					sql.append("EXCLUDED.entity ");
+				} else {
+					sql.append(
+							"jsonb_set((EXCLUDED.entity || entity.entity), '{@type}', (SELECT jsonb_agg(DISTINCT x) FROM UNNEST(entity.e_types || EXCLUDED.e_types) as x)) ");
+				}
+				sql.append(
+						"RETURNING id, entity, (xmax = 0) AS inserted), d");
+				sql.append(i);
+				sql.append(" as (select c");
+				sql.append(i);
+				sql.append(".id, c");
+				sql.append(i);
+				sql.append(".inserted, c");
+				sql.append(i);
+				sql.append(".entity, b");
+				sql.append(i);
+				sql.append(".old_entity from c");
+				sql.append(" left join b");
+				sql.append(i);
+				sql.append(" on c");
+				sql.append(i);
+				sql.append(".id = b");
+				sql.append(i);
+				sql.append(".id),");
+
 			}
-			sql.append(
-					"RETURNING id, entity, (xmax = 0) AS inserted) select c.id, c.inserted, c.entity, b.old_entity from c left join b on c.id = b.id;");
+			sql.setLength(sql.length() - 1);
+			for(int j = 1; j <= i; j++) {
+				sql.append(" select * from d");
+				sql.append(j);
+				sql.append(" union all");
+			}
+			sql.setLength(sql.length() - 9);
+			
 
 			return client.preparedQuery(sql.toString()).execute(tuple).onItem().transform(rows -> {
 				Map<String, Object> result = new HashMap<>(2);

@@ -460,5 +460,10 @@ public class MyByteArrayBuilder extends OutputStream {
 	public void setBaseRollback() {
 		this.baseRollback = count;
 	}
+	
+	public void clear() {
+		this.bufs.clear();
+		this.buf = null;
+	}
 
 }

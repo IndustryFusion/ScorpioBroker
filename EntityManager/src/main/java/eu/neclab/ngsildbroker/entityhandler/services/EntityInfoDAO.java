@@ -175,7 +175,9 @@ public class EntityInfoDAO {
 				sql.append(".entity->'@type')), b");
 				sql.append(i);
 				sql.append(
-						".entity from b ON CONFLICT (id) DO UPDATE SET id = EXCLUDED.id,e_types = ARRAY(SELECT DISTINCT UNNEST(entity.e_types || EXCLUDED.e_types)),entity =");
+						".entity from b");
+				sql.append(i);
+				sql.append(" ON CONFLICT (id) DO UPDATE SET id = EXCLUDED.id,e_types = ARRAY(SELECT DISTINCT UNNEST(entity.e_types || EXCLUDED.e_types)),entity =");
 				if (doReplace) {
 					sql.append("EXCLUDED.entity ");
 				} else {

@@ -46,6 +46,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.zip.DeflaterOutputStream;
+import java.util.zip.InflaterOutputStream;
 
 @Singleton
 public class MicroServiceUtils {
@@ -62,7 +63,7 @@ public class MicroServiceUtils {
 	String contextServerUrl;
 
 	private static final Encoder base64Encoder = Base64.getEncoder();
-	private static final byte[] NULL_ARRAY = "null".getBytes();
+	public static final byte[] NULL_ARRAY = "null".getBytes();
 	private static byte[] ZIPPED_NULL_ARRAY;
 
 	private static final byte[] BASE_APPENDIX = (",\"" + AppConstants.PAYLOAD_SERIALIZATION_CHAR + "\":[").getBytes();
@@ -118,8 +119,7 @@ public class MicroServiceUtils {
 				initialLength = maxMessageSize;
 			}
 			MyByteArrayBuilder current = new MyByteArrayBuilder(initialLength, entrySize, maxMessageSize);
-			System.out.println("Loook here");
-			System.out.println(entrySize);
+
 			try {
 				objectMapper.writeValue(current, br);
 			} catch (Exception e) {
@@ -341,7 +341,7 @@ public class MicroServiceUtils {
 
 	}
 
-	private static byte[] getZippedNullArray() {
+	public static byte[] getZippedNullArray() {
 		if (ZIPPED_NULL_ARRAY == null) {
 			try {
 				byte[] tmp = base64Encoder.encode(zip("null".getBytes()));
@@ -548,6 +548,23 @@ public class MicroServiceUtils {
 		logger.debug(pge.getWhere());
 		logger.debug(pge.getTable());
 		logger.debug(pge.getRoutine());
+
+	}
+
+	public static int getZippedNullArrayLength() {
+		return getZippedNullArray().length;
+	}
+
+	public static byte[] unzip(byte[] zippedData) throws IOException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		InflaterOutputStream inflater = new InflaterOutputStream(baos);
+		inflater.write(zippedData);
+		inflater.flush();
+		inflater.close();
+		baos.flush();
+		byte[] payloadBytes = baos.toByteArray();
+		baos.close();
+		return payloadBytes;
 
 	}
 

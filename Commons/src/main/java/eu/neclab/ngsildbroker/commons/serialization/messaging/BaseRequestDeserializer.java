@@ -30,11 +30,7 @@ public class BaseRequestDeserializer extends JsonDeserializer<BaseRequest> {
 	private static final ObjectMapper mapper = new ObjectMapper();
 	private static final TypeReference<Map<String, Object>> mapTypeRef = new TypeReference<Map<String, Object>>() {
 	};
-//	public BaseRequest deserialize(String body) throws IOException, JacksonException {
-//		BaseRequest result = new BaseRequest();
-//		
-//		return result;
-//	}
+
 	@Override
 	public BaseRequest deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
 		JsonNode node = p.getCodec().readTree(p);

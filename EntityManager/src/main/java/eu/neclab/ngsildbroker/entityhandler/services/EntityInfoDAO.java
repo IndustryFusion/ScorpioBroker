@@ -180,8 +180,11 @@ public class EntityInfoDAO {
 	}
 
 	private Map<String, Object> mergeAllEntities(List<Map<String, Object>> entityList) {
-		Map<String, Object> first = entityList.get(0);
-		for (int i = 1; i < entityList.size(); i++) {
+		if(entityList.size() == 1) {
+			return entityList.get(0);
+		}
+		Map<String, Object> first = new HashMap<>();
+		for (int i = 0; i < entityList.size(); i++) {
 			first.putAll(entityList.get(i));
 			
 		}

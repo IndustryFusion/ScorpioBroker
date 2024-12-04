@@ -100,20 +100,26 @@ public class MicroServiceUtils {
 			Map<String, List<Map<String, Object>>> prevPayload = br.getPrevPayload();
 			Set<String> ids = br.getIds();
 			int initialLength;
+			int entrySize;
 			if ((payload == null || payload.isEmpty()) && (prevPayload == null || prevPayload.isEmpty())) {
-				initialLength = ids.size() * 500 + 150;
+				entrySize = ids.size();
+				initialLength = entrySize * 500 + 150;
 			} else if ((prevPayload == null || prevPayload.isEmpty())) {
-				initialLength = br.getPayload().size() * 3500 + 150;
+				entrySize = payload.values().size();
+				initialLength = entrySize * 3500 + 150;
 			} else if ((payload == null || payload.isEmpty())) {
-				initialLength = prevPayload.size() * 8500 + 150;
+				entrySize = prevPayload.values().size();
+				initialLength = entrySize * 8500 + 150;
 			} else {
-				initialLength = payload.size() * 17000 + 150;
+				entrySize = payload.values().size();
+				initialLength = entrySize * 17000 + 150;
 			}
 			if (initialLength > maxMessageSize) {
 				initialLength = maxMessageSize;
 			}
-			MyByteArrayBuilder current = new MyByteArrayBuilder(initialLength, ids.size(), maxMessageSize);
-
+			MyByteArrayBuilder current = new MyByteArrayBuilder(initialLength, entrySize, maxMessageSize);
+			System.out.println("Loook here");
+			System.out.println(entrySize);
 			try {
 				objectMapper.writeValue(current, br);
 			} catch (Exception e) {

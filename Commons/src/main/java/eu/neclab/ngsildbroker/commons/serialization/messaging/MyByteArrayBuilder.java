@@ -443,7 +443,7 @@ public class MyByteArrayBuilder extends OutputStream {
 		bufs.add(buf);
 		int grow;
 		growTimes++;
-		if (currentItemCount > 1) {
+		if (currentItemCount > 1 && leftItems >= 0) {
 			grow = ((growTimes * growSize) / (currentItemCount - 1)) * (leftItems + 1);
 		} else {
 			grow = growSize;
@@ -460,7 +460,7 @@ public class MyByteArrayBuilder extends OutputStream {
 	public void setBaseRollback() {
 		this.baseRollback = count;
 	}
-	
+
 	public void clear() {
 		this.bufs.clear();
 		this.buf = null;

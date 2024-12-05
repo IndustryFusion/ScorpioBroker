@@ -1,6 +1,5 @@
 package eu.neclab.ngsildbroker.historyentitymanager.messaging;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -24,7 +23,6 @@ import eu.neclab.ngsildbroker.commons.datatypes.requests.BatchRequest;
 import eu.neclab.ngsildbroker.commons.datatypes.requests.CSourceBaseRequest;
 import eu.neclab.ngsildbroker.commons.datatypes.requests.DeleteEntityRequest;
 import eu.neclab.ngsildbroker.commons.datatypes.requests.UpsertEntityRequest;
-import eu.neclab.ngsildbroker.commons.serialization.messaging.MyBaseRequestDeserializer;
 import eu.neclab.ngsildbroker.historyentitymanager.service.HistoryEntityService;
 //import eu.neclab.ngsildbroker.historyentitymanager.service.HistoryEntityService;
 import io.smallrye.mutiny.Uni;
@@ -59,7 +57,7 @@ public abstract class HistoryMessagingBase {
 	@Inject
 	ObjectMapper objectMapper;
 	
-	MyBaseRequestDeserializer deserializer = new MyBaseRequestDeserializer();
+	
 	
 	Executor histRecordingExecutor;
 	
@@ -85,18 +83,13 @@ public abstract class HistoryMessagingBase {
 
 	public Uni<Void> handleEntityRaw(String byteMessage) {
 		BaseRequest baseRequest;
-//		try {
-//			baseRequest = objectMapper.readValue(byteMessage, BaseRequest.class);
-//		} catch (JsonProcessingException e) {
-//			logger.error("failed to serialize message " + byteMessage, e);
-//			return Uni.createFrom().voidItem();
-//		}
 		try {
-			baseRequest = deserializer.deserialize(byteMessage);
-		} catch (IllegalArgumentException | IllegalAccessException | IOException e) {
+			baseRequest = objectMapper.readValue(byteMessage, BaseRequest.class);
+		} catch (JsonProcessingException e) {
 			logger.error("failed to serialize message " + byteMessage, e);
 			return Uni.createFrom().voidItem();
 		}
+		
 		if (baseRequest.getRequestType() >= 30) {
 			return baseHandleBatch(baseRequest);
 		} else {

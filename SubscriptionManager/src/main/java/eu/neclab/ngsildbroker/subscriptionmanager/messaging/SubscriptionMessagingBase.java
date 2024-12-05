@@ -2,7 +2,7 @@ package eu.neclab.ngsildbroker.subscriptionmanager.messaging;
 
 import eu.neclab.ngsildbroker.commons.datatypes.requests.BaseRequest;
 import eu.neclab.ngsildbroker.commons.datatypes.requests.CSourceBaseRequest;
-import eu.neclab.ngsildbroker.commons.serialization.messaging.MyBaseRequestDeserializer;
+
 import eu.neclab.ngsildbroker.subscriptionmanager.service.SubscriptionService;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.Vertx;
@@ -33,7 +33,7 @@ public abstract class SubscriptionMessagingBase {
 
 	long lastMessage = System.currentTimeMillis();
 	long lastSent = System.currentTimeMillis();
-	MyBaseRequestDeserializer deserializer = new MyBaseRequestDeserializer();
+	
 
 	ArrayList<BaseRequest> requestStore = new ArrayList<>();
 
@@ -62,19 +62,13 @@ public abstract class SubscriptionMessagingBase {
 
 	public Uni<Void> handleEntityRaw(String byteMessage) {
 		BaseRequest baseRequest;
-//		try {
-//			baseRequest = objectMapper.readValue(byteMessage, BaseRequest.class);
-//		} catch (JsonProcessingException e) {
-//			logger.error("failed to serialize message " + byteMessage, e);
-//			return Uni.createFrom().voidItem();
-//		}
-		
 		try {
-			baseRequest = deserializer.deserialize(byteMessage);
-		} catch (IllegalArgumentException | IllegalAccessException | IOException e) {
+			baseRequest = objectMapper.readValue(byteMessage, BaseRequest.class);
+		} catch (JsonProcessingException e) {
 			logger.error("failed to serialize message " + byteMessage, e);
 			return Uni.createFrom().voidItem();
 		}
+		
 		return baseHandleEntity(baseRequest);
 
 	}

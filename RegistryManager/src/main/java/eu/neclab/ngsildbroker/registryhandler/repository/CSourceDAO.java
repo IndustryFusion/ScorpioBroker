@@ -22,16 +22,13 @@ import io.vertx.mutiny.sqlclient.RowSet;
 import io.vertx.mutiny.sqlclient.Tuple;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.List;
 import java.util.Set;
 
 @Singleton
 public class CSourceDAO {
 
-	private final static Logger logger = LoggerFactory.getLogger(CSourceDAO.class);
+	//private final static Logger logger = LoggerFactory.getLogger(CSourceDAO.class);
 	@Inject
 	ClientManager clientManager;
 

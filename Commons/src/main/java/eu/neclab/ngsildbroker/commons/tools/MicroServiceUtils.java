@@ -1,13 +1,10 @@
 package eu.neclab.ngsildbroker.commons.tools;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.util.ByteArrayBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.ongres.scram.common.bouncycastle.pbkdf2.Arrays;
-
 import eu.neclab.ngsildbroker.commons.constants.AppConstants;
 import eu.neclab.ngsildbroker.commons.datatypes.requests.BaseRequest;
 import eu.neclab.ngsildbroker.commons.datatypes.requests.subscription.SubscriptionRequest;
@@ -17,7 +14,6 @@ import eu.neclab.ngsildbroker.commons.serialization.messaging.MyByteArrayBuilder
 import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.pgclient.PgException;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +23,6 @@ import jakarta.inject.Singleton;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -52,7 +47,7 @@ import java.util.zip.InflaterOutputStream;
 public class MicroServiceUtils {
 	private final static Logger logger = LoggerFactory.getLogger(MicroServiceUtils.class);
 
-	private final static Charset UTF8_CHARSET = Charset.forName("UTF-8");
+	//private final static Charset UTF8_CHARSET = Charset.forName("UTF-8");
 
 	@ConfigProperty(name = "scorpio.gatewayurl")
 	String gatewayUrl;

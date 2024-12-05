@@ -15,18 +15,22 @@ import java.util.Set;
 import java.util.zip.InflaterOutputStream;
 
 import com.fasterxml.jackson.core.JacksonException;
+import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.github.jsonldjava.utils.JsonUtils;
+import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import eu.neclab.ngsildbroker.commons.constants.AppConstants;
 import eu.neclab.ngsildbroker.commons.datatypes.requests.BaseRequest;
 import eu.neclab.ngsildbroker.commons.tools.MicroServiceUtils;
+import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
 
 public class MyBaseRequestDeserializer {
@@ -44,15 +48,20 @@ public class MyBaseRequestDeserializer {
 		for (int i = 2; i < len; i++) {
 			switch (body.charAt(i)) {
 			case AppConstants.BYTE_ZIPPED_SERIALIZATION_CHAR: {
-				result.setZipped(body.charAt(i + 3) == 't');
-				i += 7;
+				if (body.charAt(i + 3) == 't') {
+					result.setZipped(true);
+					i += 8;
+				} else {
+					result.setZipped(false);
+					i += 9;
+				}
 				break;
 			}
 			case AppConstants.BYTE_TENANT_SERIALIZATION_CHAR: {
 				int offset = i + 4;
 				int endIndex = body.indexOf('"', offset);
 				result.setTenant(body.substring(offset, endIndex));
-				i += endIndex + 3;
+				i = endIndex + 2;
 				break;
 			}
 
@@ -60,14 +69,14 @@ public class MyBaseRequestDeserializer {
 				int offset = i + 3;
 				int endIndex = body.indexOf(',', offset);
 				result.setRequestType(Integer.parseInt(body.substring(offset, endIndex)));
-				i += endIndex + 2;
+				i = endIndex + 1;
 				break;
 			}
 			case AppConstants.BYTE_SENDTIMESTAMP_SERIALIZATION_CHAR: {
 				int offset = i + 3;
 				int endIndex = body.indexOf(',', offset);
 				result.setSendTimestamp(Long.parseLong(body.substring(offset, endIndex)));
-				i += endIndex + 2;
+				i = endIndex + 1;
 				break;
 			}
 
@@ -75,36 +84,52 @@ public class MyBaseRequestDeserializer {
 				int offset = i + 4;
 				int endIndex = body.indexOf('"', offset);
 				result.setAttribName(body.substring(offset, endIndex));
-				i += endIndex + 3;
+				i = endIndex + 2;
 				break;
 			}
 			case AppConstants.BYTE_DATASETID_SERIALIZATION_CHAR: {
 				int offset = i + 4;
 				int endIndex = body.indexOf('"', offset);
 				result.setDatasetId(body.substring(offset, endIndex));
-				i += endIndex + 3;
+				i = endIndex + 2;
 				break;
 			}
 			case AppConstants.BYTE_DELETEALL_SERIALIZATION_CHAR: {
-				result.setDeleteAll(body.charAt(i + 3) == 't');
-				i += 7;
+				if (body.charAt(i + 3) == 't') {
+					result.setDeleteAll(true);
+					i += 8;
+				} else {
+					result.setDeleteAll(false);
+					i += 9;
+				}
+
 				break;
 			}
 			case AppConstants.BYTE_DISTRIBUTED_SERIALIZATION_CHAR: {
-				result.setDistributed(body.charAt(i + 3) == 't');
-				i += 7;
+				if (body.charAt(i + 3) == 't') {
+					result.setDistributed(true);
+					i += 8;
+				} else {
+					result.setDistributed(false);
+					i += 9;
+				}
 				break;
 			}
 			case AppConstants.BYTE_NOOVERWRITE_SERIALIZATION_CHAR: {
-				result.setNoOverwrite(body.charAt(i + 3) == 't');
-				i += 7;
+				if (body.charAt(i + 3) == 't') {
+					result.setNoOverwrite(true);
+					i += 8;
+				} else {
+					result.setNoOverwrite(false);
+					i += 9;
+				}
 				break;
 			}
 			case AppConstants.BYTE_INSTANCEID_SERIALIZATION_CHAR: {
 				int offset = i + 4;
 				int endIndex = body.indexOf('"', offset);
 				result.setInstanceId(body.substring(offset, endIndex));
-				i += endIndex + 3;
+				i = endIndex + 2;
 				break;
 			}
 			case AppConstants.BYTE_PAYLOAD_SERIALIZATION_CHAR: {
@@ -113,20 +138,24 @@ public class MyBaseRequestDeserializer {
 				Set<String> ids = Sets.newHashSet();
 				Map<String, List<Map<String, Object>>> payloadMap = Maps.newHashMap();
 				Map<String, List<Map<String, Object>>> prevPayloadMap = Maps.newHashMap();
-				for (int j = start; j < end; j++) {
-					int offset = j + 1;
-					int endIndex = body.indexOf('"', j + 1);
+				int j;
+				for (j = start; j < end; j++) {
+					int offset = j + 2;
+					int endIndex = body.indexOf('"', offset);
 
 					String id = body.substring(offset, endIndex);
 					ids.add(id);
 
-					j += endIndex + 1;
+					j = endIndex + 2;
+
 					Tuple2<Integer, Map<String, Object>> t = parsePayload(body, j, end, result.isZipped());
 					Map<String, Object> payload = t.getItem2();
 					j = t.getItem1();
+
 					t = parsePayload(body, j, end, result.isZipped());
 					Map<String, Object> prevPayload = t.getItem2();
 					j = t.getItem1();
+
 					if (payload != null) {
 						MicroServiceUtils.putIntoIdMap(payloadMap, id, payload);
 					}
@@ -142,6 +171,7 @@ public class MyBaseRequestDeserializer {
 					result.setPrevPayload(prevPayloadMap);
 				}
 				result.setIds(ids);
+				i = j;
 				break;
 			}
 			}
@@ -150,7 +180,6 @@ public class MyBaseRequestDeserializer {
 	}
 
 	private Tuple2<Integer, Map<String, Object>> parsePayload(String body, int offset, int end, boolean zipped) {
-
 		Map<String, Object> result;
 		int resultOffset;
 		if (zipped) {
@@ -160,12 +189,10 @@ public class MyBaseRequestDeserializer {
 			} else {
 				int b64Start = offset + 1;
 				int b64End = body.indexOf('"', b64Start);
-				int length = b64End - b64Start;
 				String tmp = body.substring(b64Start, b64End);
 
 				try {
-					result = parseMap(new String(MicroServiceUtils.unzip(base64Decoder.decode(tmp))), 0, true, end)
-							.getItem2();
+					result = (Map<String, Object>) parseValue(new String(MicroServiceUtils.unzip(base64Decoder.decode(tmp))), new int[] { 0 });
 				} catch (IOException e) {
 					result = null;
 				}
@@ -176,12 +203,9 @@ public class MyBaseRequestDeserializer {
 				result = null;
 				resultOffset = offset + MicroServiceUtils.NULL_ARRAY.length + 1;
 			} else {
-				Tuple2<Integer, Map<String, Object>> t;
-
-				t = parseMap(body, offset, true, end);
-
-				resultOffset = t.getItem1() + 1;
-				result = t.getItem2();
+				int[] tmpOffset = new int[] { offset };
+				result = (Map<String, Object>) parseValue(body,tmpOffset );
+				resultOffset = tmpOffset[0] + 1;
 			}
 		}
 
@@ -199,154 +223,113 @@ public class MyBaseRequestDeserializer {
 
 	private boolean checkForNullEntry(String body, int offset) {
 		for (int i = 0; i < MicroServiceUtils.NULL_ARRAY.length; i++) {
-			if (body.charAt(i + offset) == MicroServiceUtils.NULL_ARRAY[i]) {
+			if (body.charAt(i + offset) != MicroServiceUtils.NULL_ARRAY[i]) {
 				return false;
 			}
 		}
 		return true;
 	}
 
-	private static Tuple2<Integer, Map<String, Object>> parseMap(String jsonData, int offset, boolean breakAtRoot,
-			int end) {
-		Map<String, Object> resultMap = new HashMap<>();
-		StringBuilder keyBuilder = new StringBuilder();
-		StringBuilder valueBuilder = new StringBuilder();
-		boolean inKey = false, inValue = false, inString = false;
-		int braceCount = 0;
-		char currentChar;
-		int i;
-
-		for (i = offset; i < end; i++) {
-			currentChar = jsonData.charAt(i);
-
-			if (currentChar == '{') {
-				braceCount++;
-				if (braceCount == 1) {
-					continue; // Skip the opening brace of the root object
-				}
-				Tuple2<Integer, Map<String, Object>> t = parseMap(jsonData, i, false, end);
-				i = t.getItem1();
-				resultMap.put(keyBuilder.toString(), t.getItem2());
-			} else if (currentChar == '}') {
-				braceCount--;
-				if (braceCount == 0) {
-					if (inValue) {
-						resultMap.put(keyBuilder.toString(), parseValue(valueBuilder.toString()));
-					}
-					if (breakAtRoot) {
-						break; // End of the root JSON object
-					}
-				}
-			} else if (currentChar == '[') {
-				Tuple2<Integer, List<Object>> t = parseArray(jsonData, i, end);
-				i = t.getItem1();
-				resultMap.put(keyBuilder.toString(), t.getItem2());
-			} else if (currentChar == '"') {
-				inString = !inString;
-				if (inString) {
-					if (!inKey && !inValue) {
-						inKey = true;
-						keyBuilder.setLength(0); // Reset key builder
-					} else if (inKey) {
-						inKey = false;
-						inValue = true;
-						valueBuilder.setLength(0); // Reset value builder
-					} else if (inValue) {
-						inValue = false;
-						resultMap.put(keyBuilder.toString(), parseValue(valueBuilder.toString()));
-					}
-				}
-			} else if (inString) {
-				if (inKey) {
-					keyBuilder.append(currentChar);
-				} else if (inValue) {
-					valueBuilder.append(currentChar);
-				}
-			} else if (currentChar == ':' && !inString) {
-				inValue = true;
-				valueBuilder.setLength(0); // Reset value builder
-			} else if (currentChar == ',' && !inString) {
-				if (inValue) {
-					resultMap.put(keyBuilder.toString(), parseValue(valueBuilder.toString()));
-					inValue = false;
-				}
-			} else if (!Character.isWhitespace(currentChar)) {
-				if (inValue) {
-					valueBuilder.append(currentChar);
-				}
-			}
-		}
-
-		return Tuple2.of(i, resultMap);
-	}
-
-	private static Tuple2<Integer, List<Object>> parseArray(String jsonData, int offset, int end) {
-		List<Object> resultList = new ArrayList<>();
-		StringBuilder valueBuilder = new StringBuilder();
-		boolean inString = false;
-		int braceCount = 0;
-		char currentChar;
-		int i;
-
-		for (i = offset; i < end; i++) {
-			currentChar = jsonData.charAt(i);
-
-			if (currentChar == '[') {
-				braceCount++;
-				if (braceCount == 1) {
-					continue; // Skip the opening bracket of the array
-				}
-				Tuple2<Integer, List<Object>> t = parseArray(jsonData, i, end);
-				i = t.getItem1();
-				resultList.add(t.getItem2());
-			} else if (currentChar == ']') {
-				braceCount--;
-				if (braceCount == 0) {
-					if (valueBuilder.length() > 0) {
-						resultList.add(parseValue(valueBuilder.toString()));
-					}
-					break; // End of the array
-				}
-			} else if (currentChar == '{') {
-				Tuple2<Integer, Map<String, Object>> t = parseMap(jsonData, i, false, end);
-				i = t.getItem1();
-				resultList.add(t.getItem2());
-			} else if (currentChar == '"') {
-				inString = !inString;
-				if (!inString) {
-					resultList.add(valueBuilder.toString());
-					valueBuilder.setLength(0); // Reset value builder
-				}
-			} else if (inString) {
-				valueBuilder.append(currentChar);
-			} else if (currentChar == ',' && !inString) {
-				if (valueBuilder.length() > 0) {
-					resultList.add(parseValue(valueBuilder.toString()));
-					valueBuilder.setLength(0); // Reset value builder
-				}
-			} else if (!Character.isWhitespace(currentChar)) {
-				valueBuilder.append(currentChar);
-			}
-		}
-
-		return Tuple2.of(i, resultList);
-	}
-
-	private static Object parseValue(String value) {
-		if (value.equals("null")) {
+	private static Object parseValue(String json, int[] index) {
+		char currentChar = json.charAt(index[0]);
+		if (currentChar == '{') {
+			return parseObject(json, index);
+		} else if (currentChar == '[') {
+			return parseArray(json, index);
+		} else if (currentChar == '"') {
+			return parseString(json, index);
+		} else if (Character.isDigit(currentChar) || currentChar == '-') {
+			return parseNumber(json, index);
+		} else if (json.startsWith("true", index[0])) {
+			index[0] += 4;
+			return true;
+		} else if (json.startsWith("false", index[0])) {
+			index[0] += 5;
+			return false;
+		} else if (json.startsWith("null", index[0])) {
+			index[0] += 4;
 			return null;
-		} else if (value.equals("true") || value.equals("false")) {
-			return Boolean.parseBoolean(value);
-		} else {
-			try {
-				if (value.contains(".")) {
-					return Double.parseDouble(value);
-				} else {
-					return Integer.parseInt(value);
-				}
-			} catch (NumberFormatException e) {
-				return value; // Return as string if not a number
+		}
+		throw new IllegalArgumentException("Unexpected character: " + currentChar);
+	}
+
+	private static Map<String, Object> parseObject(String json, int[] index) {
+		Map<String, Object> map = new HashMap<>();
+		index[0]++; // Skip '{'
+		while (json.charAt(index[0]) != '}') {
+			skipWhitespace(json, index);
+			String key = parseString(json, index);
+			skipWhitespace(json, index);
+			index[0]++; // Skip ':'
+			skipWhitespace(json, index);
+			Object value = parseValue(json, index);
+			map.put(key, value);
+			skipWhitespace(json, index);
+			if (json.charAt(index[0]) == ',') {
+				index[0]++; // Skip ','
 			}
+			skipWhitespace(json, index);
+		}
+		index[0]++; // Skip '}'
+		return map;
+	}
+
+	private static List<Object> parseArray(String json, int[] index) {
+		List<Object> list = new ArrayList<>();
+		index[0]++; // Skip '['
+		while (json.charAt(index[0]) != ']') {
+			skipWhitespace(json, index);
+			list.add(parseValue(json, index));
+			skipWhitespace(json, index);
+			if (json.charAt(index[0]) == ',') {
+				index[0]++; // Skip ','
+			}
+			skipWhitespace(json, index);
+		}
+		index[0]++; // Skip ']'
+		return list;
+	}
+
+	private static String parseString(String json, int[] index) {
+		StringBuilder sb = new StringBuilder();
+		index[0]++; // Skip '"'
+		while (json.charAt(index[0]) != '"') {
+			char currentChar = json.charAt(index[0]);
+			if (currentChar == '\\') {
+				index[0]++;
+				currentChar = json.charAt(index[0]);
+				if (currentChar == 'u') {
+					sb.append((char) Integer.parseInt(json.substring(index[0] + 1, index[0] + 5), 16));
+					index[0] += 4;
+				} else {
+					sb.append(currentChar);
+				}
+			} else {
+				sb.append(currentChar);
+			}
+			index[0]++;
+		}
+		index[0]++; // Skip closing '"'
+		return sb.toString();
+	}
+
+	private static Number parseNumber(String json, int[] index) {
+		int start = index[0];
+		while (index[0] < json.length() && (Character.isDigit(json.charAt(index[0])) || json.charAt(index[0]) == '.'
+				|| json.charAt(index[0]) == '-' || json.charAt(index[0]) == '+')) {
+			index[0]++;
+		}
+		String numberStr = json.substring(start, index[0]);
+		if (numberStr.contains(".") || numberStr.contains("e") || numberStr.contains("E")) {
+			return Double.parseDouble(numberStr);
+		} else {
+			return Long.parseLong(numberStr);
+		}
+	}
+
+	private static void skipWhitespace(String json, int[] index) {
+		while (index[0] < json.length() && Character.isWhitespace(json.charAt(index[0]))) {
+			index[0]++;
 		}
 	}
 

@@ -192,7 +192,8 @@ public class MyBaseRequestDeserializer {
 				String tmp = body.substring(b64Start, b64End);
 
 				try {
-					result = (Map<String, Object>) parseValue(new String(MicroServiceUtils.unzip(base64Decoder.decode(tmp))), new int[] { 0 });
+					result = (Map<String, Object>) parseValue(
+							new String(MicroServiceUtils.unzip(base64Decoder.decode(tmp))), new int[] { 0 });
 				} catch (IOException e) {
 					result = null;
 				}
@@ -204,7 +205,7 @@ public class MyBaseRequestDeserializer {
 				resultOffset = offset + MicroServiceUtils.NULL_ARRAY.length + 1;
 			} else {
 				int[] tmpOffset = new int[] { offset };
-				result = (Map<String, Object>) parseValue(body,tmpOffset );
+				result = (Map<String, Object>) parseValue(body, tmpOffset);
 				resultOffset = tmpOffset[0] + 1;
 			}
 		}
@@ -232,43 +233,42 @@ public class MyBaseRequestDeserializer {
 
 	private static Object parseValue(String json, int[] index) {
 		char currentChar = json.charAt(index[0]);
-		if (currentChar == '{') {
+		switch (currentChar) {
+		case '{':
 			return parseObject(json, index);
-		} else if (currentChar == '[') {
+		case '[':
 			return parseArray(json, index);
-		} else if (currentChar == '"') {
+		case '"':
 			return parseString(json, index);
-		} else if (Character.isDigit(currentChar) || currentChar == '-') {
-			return parseNumber(json, index);
-		} else if (json.startsWith("true", index[0])) {
-			index[0] += 4;
-			return true;
-		} else if (json.startsWith("false", index[0])) {
-			index[0] += 5;
-			return false;
-		} else if (json.startsWith("null", index[0])) {
-			index[0] += 4;
-			return null;
+		default:
+			if (Character.isDigit(currentChar) || currentChar == '-') {
+				return parseNumber(json, index);
+			} else if (json.startsWith("true", index[0])) {
+				index[0] += 4;
+				return true;
+			} else if (json.startsWith("false", index[0])) {
+				index[0] += 5;
+				return false;
+			} else if (json.startsWith("null", index[0])) {
+				index[0] += 4;
+				return null;
+			} else {
+				throw new IllegalArgumentException("Unexpected character: " + currentChar);
+			}
 		}
-		throw new IllegalArgumentException("Unexpected character: " + currentChar);
 	}
 
 	private static Map<String, Object> parseObject(String json, int[] index) {
 		Map<String, Object> map = new HashMap<>();
 		index[0]++; // Skip '{'
 		while (json.charAt(index[0]) != '}') {
-			skipWhitespace(json, index);
 			String key = parseString(json, index);
-			skipWhitespace(json, index);
 			index[0]++; // Skip ':'
-			skipWhitespace(json, index);
 			Object value = parseValue(json, index);
 			map.put(key, value);
-			skipWhitespace(json, index);
 			if (json.charAt(index[0]) == ',') {
 				index[0]++; // Skip ','
 			}
-			skipWhitespace(json, index);
 		}
 		index[0]++; // Skip '}'
 		return map;
@@ -278,13 +278,10 @@ public class MyBaseRequestDeserializer {
 		List<Object> list = new ArrayList<>();
 		index[0]++; // Skip '['
 		while (json.charAt(index[0]) != ']') {
-			skipWhitespace(json, index);
 			list.add(parseValue(json, index));
-			skipWhitespace(json, index);
 			if (json.charAt(index[0]) == ',') {
 				index[0]++; // Skip ','
 			}
-			skipWhitespace(json, index);
 		}
 		index[0]++; // Skip ']'
 		return list;
@@ -324,12 +321,6 @@ public class MyBaseRequestDeserializer {
 			return Double.parseDouble(numberStr);
 		} else {
 			return Long.parseLong(numberStr);
-		}
-	}
-
-	private static void skipWhitespace(String json, int[] index) {
-		while (index[0] < json.length() && Character.isWhitespace(json.charAt(index[0]))) {
-			index[0]++;
 		}
 	}
 

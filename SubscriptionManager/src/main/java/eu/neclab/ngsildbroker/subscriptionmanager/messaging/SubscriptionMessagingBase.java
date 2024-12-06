@@ -40,7 +40,7 @@ public abstract class SubscriptionMessagingBase {
 	public Uni<Void> baseHandleEntity(BaseRequest message) {
 		if (collectInterval == -1) {
 			logger.debug("Subscription sub manager got called for entity: " + message.getIds());
-			return subscriptionService.checkSubscriptions(message).onFailure().recoverWithUni(t -> {
+			return subscriptionService.handleBaseRequest(message).onFailure().recoverWithUni(t -> {
 				logger.debug("Exception Occurred in checkSubscriptions: " + t);
 				t.printStackTrace();
 				logger.debug(t.getStackTrace().toString());

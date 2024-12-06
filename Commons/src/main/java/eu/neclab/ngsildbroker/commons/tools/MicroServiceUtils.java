@@ -7,9 +7,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import eu.neclab.ngsildbroker.commons.constants.AppConstants;
 import eu.neclab.ngsildbroker.commons.datatypes.requests.BaseRequest;
+import eu.neclab.ngsildbroker.commons.datatypes.requests.CSourceBaseRequest;
 import eu.neclab.ngsildbroker.commons.datatypes.requests.subscription.SubscriptionRequest;
 import eu.neclab.ngsildbroker.commons.enums.ErrorType;
 import eu.neclab.ngsildbroker.commons.exceptions.ResponseException;
+import eu.neclab.ngsildbroker.commons.interfaces.BaseRequestHandler;
+import eu.neclab.ngsildbroker.commons.interfaces.CSourceHandler;
 import eu.neclab.ngsildbroker.commons.serialization.messaging.MyByteArrayBuilder;
 import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.pgclient.PgException;
@@ -17,8 +20,16 @@ import io.vertx.pgclient.PgException;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.quarkus.arc.All;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import io.quarkus.runtime.configuration.ConfigUtils;
+import io.smallrye.mutiny.Uni;
 import io.smallrye.reactive.messaging.MutinyEmitter;
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
 import java.io.ByteArrayOutputStream;
@@ -57,6 +68,14 @@ public class MicroServiceUtils {
 	@ConfigProperty(name = "atcontext.url", defaultValue = "http://localhost:9090/ngsi-ld/v1/jsonldContexts/")
 	String contextServerUrl;
 
+	private boolean inMemoryActive = ConfigUtils.isProfileActive("in-memory");
+	
+
+	List<CSourceHandler> csourceReceivers = Lists.newArrayList();
+	
+	List<BaseRequestHandler> baseRequestReceivers = Lists.newArrayList();
+	
+	
 	private static final Encoder base64Encoder = Base64.getEncoder();
 	public static final byte[] NULL_ARRAY = "null".getBytes();
 	private static byte[] ZIPPED_NULL_ARRAY;
@@ -89,8 +108,12 @@ public class MicroServiceUtils {
 		tmp.add(local);
 	}
 
-	public static void serializeAndSplitObjectAndEmit(Object obj, int maxMessageSize, MutinyEmitter<String> emitter,
+	public void serializeAndSplitObjectAndEmit(Object obj, int maxMessageSize, MutinyEmitter<String> emitter,
 			ObjectMapper objectMapper) throws ResponseException {
+		if(inMemoryActive) {
+			sendObjectInMemory(obj);
+			return;
+		}
 		if (obj instanceof BaseRequest br) {
 			Map<String, List<Map<String, Object>>> payload = br.getPayload();
 			Map<String, List<Map<String, Object>>> prevPayload = br.getPrevPayload();
@@ -336,6 +359,27 @@ public class MicroServiceUtils {
 
 	}
 
+	private void sendObjectInMemory(Object obj) {
+		
+		if(obj instanceof BaseRequest br) {
+			baseRequestReceivers.get(0).handleBaseRequest(br).subscribe().with(x -> {});
+			for(int i = 1; i < baseRequestReceivers.size(); i++) {
+				baseRequestReceivers.get(1).handleBaseRequest(br).subscribe().with(x -> {});
+			}
+		}else if(obj instanceof CSourceBaseRequest cr) {
+			csourceReceivers.get(0).handleRegistryChange(cr).subscribe().with(x -> {});
+			for(int i = 1; i < csourceReceivers.size(); i++) {
+				csourceReceivers.get(i).handleRegistryChange(cr).subscribe().with(x -> {});
+			}
+		}
+		
+	}
+
+	private BaseRequest deepCopyBaseRequest(BaseRequest br) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	public static byte[] getZippedNullArray() {
 		if (ZIPPED_NULL_ARRAY == null) {
 			try {
@@ -362,35 +406,7 @@ public class MicroServiceUtils {
 		return tmp;
 	}
 
-	public static List<String> splitStringByByteLength(String src, int maxsize) {
-		String id = String.format("%020d", src.hashCode() * System.currentTimeMillis());
-		logger.debug("Splitting into size " + maxsize);
-		logger.debug(src);
-		Charset cs = Charset.forName("UTF-16");
-		CharsetEncoder coder = cs.newEncoder();
-		ByteBuffer out = ByteBuffer.allocate(maxsize); // output buffer of required size
-		CharBuffer in = CharBuffer.wrap(src);
-		List<String> result = new ArrayList<>(); // a list to store the chunks
-		int pos = 0;
-		int i = 0;
-		while (true) {
-			CoderResult cr = coder.encode(in, out, true); // try to encode as much as possible
-			int newpos = src.length() - in.length();
-			String posS = String.format("%011d", i);
-			String s = "$" + id + posS + src.substring(pos, newpos);
-			i++;
-			result.add(s); // add what has been encoded to the list
-			pos = newpos; // store new input position
-			out.rewind(); // and rewind output buffer
-			if (!cr.isOverflow()) {
-				break; // everything has been encoded
-			}
-		}
-		result.set(0, "#" + id + String.format("%011d", i) + result.get(0).substring(32));
-		result.set(result.size() - 1, "%" + result.get(result.size() - 1).substring(1));
-		return result;
-	}
-
+	
 	public URI getGatewayURL() {
 		logger.trace("getGatewayURL() :: started");
 		String url = null;
@@ -561,6 +577,14 @@ public class MicroServiceUtils {
 		baos.close();
 		return payloadBytes;
 
+	}
+	
+	public void registerCSourceReceiver(CSourceHandler handler) {
+		csourceReceivers.add(handler);
+	}
+	
+	public void registerBaseRequestReceiver(BaseRequestHandler handler) {
+		baseRequestReceivers.add(handler);
 	}
 
 }

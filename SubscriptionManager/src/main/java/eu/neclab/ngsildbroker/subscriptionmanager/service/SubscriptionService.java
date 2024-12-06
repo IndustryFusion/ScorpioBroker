@@ -59,6 +59,8 @@ import eu.neclab.ngsildbroker.commons.datatypes.terms.OmitTerm;
 import eu.neclab.ngsildbroker.commons.datatypes.terms.PickTerm;
 import eu.neclab.ngsildbroker.commons.enums.ErrorType;
 import eu.neclab.ngsildbroker.commons.exceptions.ResponseException;
+import eu.neclab.ngsildbroker.commons.interfaces.BaseRequestHandler;
+import eu.neclab.ngsildbroker.commons.interfaces.CSourceHandler;
 import eu.neclab.ngsildbroker.commons.tools.MicroServiceUtils;
 import eu.neclab.ngsildbroker.commons.tools.SerializationTools;
 import eu.neclab.ngsildbroker.commons.tools.SubscriptionTools;
@@ -84,7 +86,7 @@ import io.vertx.pgclient.PgException;
 
 @Singleton
 @SuppressWarnings("unchecked")
-public class SubscriptionService {
+public class SubscriptionService implements CSourceHandler, BaseRequestHandler {
 
 	private final static Logger logger = LoggerFactory.getLogger(SubscriptionService.class);
 
@@ -421,7 +423,8 @@ public class SubscriptionService {
 			return Uni.createFrom().voidItem();
 		});
 		Uni.combine().all().unis(loadSubs, loadRegs).with(l -> l).await().indefinitely();
-
+		this.microServiceUtils.registerBaseRequestReceiver(this);
+		this.microServiceUtils.registerCSourceReceiver(this);
 	}
 
 	private boolean isIntervalSub(SubscriptionRequest request) {
@@ -731,7 +734,7 @@ public class SubscriptionService {
 		});
 	}
 
-	public Uni<Void> checkSubscriptions(BaseRequest message) {
+	public Uni<Void> handleBaseRequest(BaseRequest message) {
 		Collection<SubscriptionRequest> potentialSubs = tenant2subscriptionId2Subscription.row(message.getTenant())
 				.values();
 		return checkSubscriptions(message, potentialSubs);
@@ -1816,5 +1819,6 @@ public class SubscriptionService {
 		// TODO add aditional changes on what could fire in a csource reg
 		return false;
 	}
+
 
 }

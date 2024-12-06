@@ -50,6 +50,8 @@ import eu.neclab.ngsildbroker.commons.datatypes.terms.ScopeQueryTerm;
 import eu.neclab.ngsildbroker.commons.datatypes.terms.TypeQueryTerm;
 import eu.neclab.ngsildbroker.commons.enums.ErrorType;
 import eu.neclab.ngsildbroker.commons.exceptions.ResponseException;
+import eu.neclab.ngsildbroker.commons.interfaces.BaseRequestHandler;
+import eu.neclab.ngsildbroker.commons.interfaces.CSourceHandler;
 import eu.neclab.ngsildbroker.commons.tools.EntityTools;
 import eu.neclab.ngsildbroker.commons.tools.HttpUtils;
 import eu.neclab.ngsildbroker.commons.tools.MicroServiceUtils;
@@ -74,7 +76,7 @@ import jakarta.inject.Inject;
 
 @ApplicationScoped
 @SuppressWarnings("unchecked")
-public class QueryService {
+public class QueryService implements CSourceHandler {
 
 	private static Logger logger = LoggerFactory.getLogger(QueryService.class);
 
@@ -98,6 +100,8 @@ public class QueryService {
 
 	@ConfigProperty(name = "scorpio.fed.timeout", defaultValue = "20000")
 	int timeout;
+	@Inject
+	MicroServiceUtils microServiceUtils;
 
 	@PostConstruct
 	void setup() {
@@ -106,6 +110,7 @@ public class QueryService {
 			tenant2CId2RegEntries = t;
 			return null;
 		}).await().indefinitely();
+		this.microServiceUtils.registerCSourceReceiver(this);
 	}
 
 	// This is needed so that @postconstruct runs on the startup thread and not on a

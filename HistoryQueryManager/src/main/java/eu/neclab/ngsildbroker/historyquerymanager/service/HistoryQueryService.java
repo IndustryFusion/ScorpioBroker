@@ -48,8 +48,11 @@ import eu.neclab.ngsildbroker.commons.datatypes.terms.TemporalQueryTerm;
 import eu.neclab.ngsildbroker.commons.datatypes.terms.TypeQueryTerm;
 import eu.neclab.ngsildbroker.commons.enums.ErrorType;
 import eu.neclab.ngsildbroker.commons.exceptions.ResponseException;
+import eu.neclab.ngsildbroker.commons.interfaces.BaseRequestHandler;
+import eu.neclab.ngsildbroker.commons.interfaces.CSourceHandler;
 import eu.neclab.ngsildbroker.commons.tools.EntityTools;
 import eu.neclab.ngsildbroker.commons.tools.HttpUtils;
+import eu.neclab.ngsildbroker.commons.tools.MicroServiceUtils;
 import eu.neclab.ngsildbroker.historyquerymanager.repository.HistoryDAO;
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.mutiny.Uni;
@@ -61,7 +64,7 @@ import static eu.neclab.ngsildbroker.commons.tools.HttpUtils.parseLinkHeaderNoUn
 
 @Singleton
 @SuppressWarnings("unchecked")
-public class HistoryQueryService {
+public class HistoryQueryService implements CSourceHandler {
 
 	private final static Logger logger = LoggerFactory.getLogger(HistoryQueryService.class);
 
@@ -75,6 +78,9 @@ public class HistoryQueryService {
 
 	@Inject
 	HistoryDAO historyDAO;
+	
+	@Inject
+	MicroServiceUtils microServiceUtils;
 
 	@ConfigProperty(name = "scorpio.directDB", defaultValue = "true")
 	boolean directDB;
@@ -88,6 +94,7 @@ public class HistoryQueryService {
 			tenant2CId2RegEntries = t;
 			return null;
 		}).await().indefinitely();
+		this.microServiceUtils.registerCSourceReceiver(this);
 	}
 
 	// This is needed so that @postconstruct runs on the startup thread and not on a

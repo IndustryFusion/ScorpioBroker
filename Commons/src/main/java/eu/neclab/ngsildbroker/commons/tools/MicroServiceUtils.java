@@ -364,7 +364,7 @@ public class MicroServiceUtils {
 		if(obj instanceof BaseRequest br) {
 			baseRequestReceivers.get(0).handleBaseRequest(br).subscribe().with(x -> {});
 			for(int i = 1; i < baseRequestReceivers.size(); i++) {
-				baseRequestReceivers.get(1).handleBaseRequest(br).subscribe().with(x -> {});
+				baseRequestReceivers.get(1).handleBaseRequest(br.copy()).subscribe().with(x -> {});
 			}
 		}else if(obj instanceof CSourceBaseRequest cr) {
 			csourceReceivers.get(0).handleRegistryChange(cr).subscribe().with(x -> {});
@@ -375,10 +375,7 @@ public class MicroServiceUtils {
 		
 	}
 
-	private BaseRequest deepCopyBaseRequest(BaseRequest br) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	
 
 	public static byte[] getZippedNullArray() {
 		if (ZIPPED_NULL_ARRAY == null) {
@@ -476,7 +473,7 @@ public class MicroServiceUtils {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static List<Object> deppCopyList(List<?> l) {
+	public static List<Object> deppCopyList(List<?> l) {
 		if (l == null) {
 			return null;
 		}

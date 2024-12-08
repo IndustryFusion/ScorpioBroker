@@ -932,7 +932,7 @@ public class EntityService implements CSourceHandler {
 			if (cId2RemoteHostEntity.isEmpty()) {
 				toStore = originalEntity;
 			} else {
-				toStore = microServiceUtils.deepCopyMap(originalEntity);
+				toStore = MicroServiceUtils.deepCopyMap(originalEntity);
 			}
 			toStore.put(NGSIConstants.JSON_LD_ID, entityId);
 			if (originalTypes != null && !originalTypes.isEmpty()) {
@@ -1028,7 +1028,7 @@ public class EntityService implements CSourceHandler {
 			Map<String, Object> local = split.getItem1();
 			Context context = itContext.next();
 			if (local != null) {
-				microServiceUtils.putIntoIdMap(localEntities, (String) local.get(NGSIConstants.JSON_LD_ID), local);
+				MicroServiceUtils.putIntoIdMap(localEntities, (String) local.get(NGSIConstants.JSON_LD_ID), local);
 
 			} else {
 				itContext.remove();
@@ -1170,7 +1170,7 @@ public class EntityService implements CSourceHandler {
 			Context context = itContext.next();
 			if (local != null) {
 				local.remove(NGSIConstants.NGSI_LD_CREATED_AT);
-				microServiceUtils.putIntoIdMap(localEntities, entityId, local);
+				MicroServiceUtils.putIntoIdMap(localEntities, entityId, local);
 			} else {
 				itContext.remove();
 			}
@@ -1262,7 +1262,7 @@ public class EntityService implements CSourceHandler {
 							opResult.addSuccess(new CRUDSuccess(null, null, null, Sets.newHashSet()));
 							result.add(opResult);
 							Map<String, Object> old = (Map<String, Object>) success.get("old");
-							microServiceUtils.putIntoIdMap(oldEntities, entityId, old);
+							MicroServiceUtils.putIntoIdMap(oldEntities, entityId, old);
 
 						}
 						request.setPrevPayload(oldEntities);
@@ -1338,7 +1338,7 @@ public class EntityService implements CSourceHandler {
 			Map<String, Object> local = split.getItem1();
 			Context context = itContext.next();
 			if (local != null) {
-				microServiceUtils.putIntoIdMap(localEntities, entityId, local);
+				MicroServiceUtils.putIntoIdMap(localEntities, entityId, local);
 			} else {
 				itContext.remove();
 			}
@@ -1370,7 +1370,7 @@ public class EntityService implements CSourceHandler {
 						boolean updated = (boolean) entityResult.get("updated");
 						Map<String, Object> old = (Map<String, Object>) entityResult.get("old");
 
-						microServiceUtils.putIntoIdMap(olds, entityId, old);
+						MicroServiceUtils.putIntoIdMap(olds, entityId, old);
 
 						NGSILDOperationResult opResult = new NGSILDOperationResult(AppConstants.UPSERT_REQUEST,
 								entityId);
@@ -1539,7 +1539,7 @@ public class EntityService implements CSourceHandler {
 					for (Map<String, Object> entry : successes) {
 						String entityId = (String) entry.get("id");
 						successEntityIds.add(entityId);
-						microServiceUtils.putIntoIdMap(deleted, entityId, (Map<String, Object>) entry.get("old"));
+						MicroServiceUtils.putIntoIdMap(deleted, entityId, (Map<String, Object>) entry.get("old"));
 						NGSILDOperationResult opResult = new NGSILDOperationResult(AppConstants.DELETE_REQUEST,
 								entityId);
 						opResult.addSuccess(new CRUDSuccess(null, null, null, Sets.newHashSet()));
@@ -1940,7 +1940,7 @@ public class EntityService implements CSourceHandler {
 			Context context = itContext.next();
 			if (local != null) {
 				local.remove(NGSIConstants.NGSI_LD_CREATED_AT);
-				microServiceUtils.putIntoIdMap(localEntities, entityId, local);
+				MicroServiceUtils.putIntoIdMap(localEntities, entityId, local);
 			} else {
 				itContext.remove();
 			}
@@ -2030,7 +2030,7 @@ public class EntityService implements CSourceHandler {
 							Map<String, Object> old = (Map<String, Object>) success.get("old");
 							handleMergePatchDBResult(Map.of("old", old, "new", success.get("new"), "deleted",
 									success.get("deleted"), "updated", success.get("updated")), tenant, entityId);
-							microServiceUtils.putIntoIdMap(oldEntities, entityId, old);
+							MicroServiceUtils.putIntoIdMap(oldEntities, entityId, old);
 							NGSILDOperationResult opResult = new NGSILDOperationResult(AppConstants.MERGE_PATCH_REQUEST,
 									entityId);
 							opResult.addSuccess(new CRUDSuccess(null, null, null, Sets.newHashSet()));

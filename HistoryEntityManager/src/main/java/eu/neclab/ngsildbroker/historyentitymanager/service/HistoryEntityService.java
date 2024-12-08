@@ -46,7 +46,6 @@ import eu.neclab.ngsildbroker.commons.datatypes.requests.UpdateAttrHistoryEntity
 import eu.neclab.ngsildbroker.commons.datatypes.results.Attrib;
 import eu.neclab.ngsildbroker.commons.datatypes.results.CRUDSuccess;
 import eu.neclab.ngsildbroker.commons.datatypes.results.NGSILDOperationResult;
-import eu.neclab.ngsildbroker.commons.interfaces.BaseRequestHandler;
 import eu.neclab.ngsildbroker.commons.interfaces.CSourceHandler;
 import eu.neclab.ngsildbroker.commons.tools.EntityTools;
 import eu.neclab.ngsildbroker.commons.tools.HttpUtils;

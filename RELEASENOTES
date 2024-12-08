@@ -1,3 +1,7 @@
+RELEASE NOTES 5.0.5
+
+Hotfix release for the upsert change
+
 RELEASE NOTES 5.0.4
 
 this release mainly address a performance and memory issue in the serialization and an issue with the upsert operation.

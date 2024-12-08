@@ -21,15 +21,9 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.quarkus.arc.All;
-import io.quarkus.arc.profile.IfBuildProfile;
-
 import io.quarkus.runtime.configuration.ConfigUtils;
-import io.smallrye.mutiny.Uni;
 import io.smallrye.reactive.messaging.MutinyEmitter;
 import jakarta.annotation.PostConstruct;
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
 import java.io.ByteArrayOutputStream;
@@ -38,11 +32,6 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetEncoder;
-import java.nio.charset.CoderResult;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Base64.Encoder;

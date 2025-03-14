@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -62,6 +63,7 @@ import eu.neclab.ngsildbroker.commons.exceptions.ResponseException;
 import eu.neclab.ngsildbroker.commons.interfaces.BaseRequestHandler;
 import eu.neclab.ngsildbroker.commons.interfaces.CSourceHandler;
 import eu.neclab.ngsildbroker.commons.tools.MicroServiceUtils;
+import eu.neclab.ngsildbroker.commons.tools.NotificationBuffer;
 import eu.neclab.ngsildbroker.commons.tools.SerializationTools;
 import eu.neclab.ngsildbroker.commons.tools.SubscriptionTools;
 import eu.neclab.ngsildbroker.subscriptionmanager.messaging.SyncService;
@@ -127,6 +129,9 @@ public class SubscriptionService implements CSourceHandler, BaseRequestHandler {
 	@ConfigProperty(name = "scorpio.entity-manager-server", defaultValue = "http://localhost:9090")
 	private String entityServiceUrl;
 
+	@ConfigProperty(name = "scorpio.subscription.buffertime", defaultValue = "1000")
+	private int notificationBufferTime;
+
 	private String ALL_TYPES_SUB;
 
 	private Table<String, SubscriptionRemoteHost, Set<String>> tenant2RemoteHost2SubIds = HashBasedTable.create();
@@ -143,6 +148,7 @@ public class SubscriptionService implements CSourceHandler, BaseRequestHandler {
 	private HashMap<String, List<SubscriptionRequest>> remoteNotifyCallbackId2SubRequest = new HashMap<String, List<SubscriptionRequest>>();
 	private HashMap<SubscriptionRemoteHost, String> subRemoteRequest2RemoteNotifyCallbackId = new HashMap<SubscriptionRemoteHost, String>();
 	private HashMap<String, Set<SubscriptionRemoteHost>> cId2RemoteHost = new HashMap<>();
+	private final Map<String, NotificationBuffer> subId2Buffer = new ConcurrentHashMap<>();
 
 	private WebClient webClient;
 
@@ -915,7 +921,16 @@ public class SubscriptionService implements CSourceHandler, BaseRequestHandler {
 					it.remove();
 				}
 			}
-			unis.add(sendNotification(potentialSub, dataToSend));
+			if (!dataToSend.isEmpty()) {
+				NotificationBuffer buffer = subId2Buffer.computeIfAbsent(
+					potentialSub.getId(), 
+					k -> new NotificationBuffer(potentialSub)
+				);
+				for (Map<String, Object> entity : dataToSend) {
+					buffer.addEntity(entity);
+				}
+			}
+			// unis.add(sendNotification(potentialSub, dataToSend));
 		}
 		if (unis.isEmpty()) {
 			return Uni.createFrom().voidItem();
@@ -1820,5 +1835,26 @@ public class SubscriptionService implements CSourceHandler, BaseRequestHandler {
 		return false;
 	}
 
-
+	@Scheduled(every = "1s")
+	void checkBuffers() {
+		List<Uni<Void>> unis = Lists.newArrayList();
+		long now = System.currentTimeMillis();
+		List<String> toRemove = new ArrayList<>();
+		
+		subId2Buffer.forEach((subId, buffer) -> {
+			if (now - buffer.getLastUpdateTime() > notificationBufferTime) {
+				buffer.getTimestamp2Entities().forEach((timestamp, entities) -> {
+					unis.add(sendNotification(buffer.getSubscription(), entities));
+				});
+				toRemove.add(subId);
+			}
+		});
+		toRemove.forEach(subId2Buffer::remove);
+		
+		if (!unis.isEmpty()) {
+			Uni.combine().all().unis(unis).discardItems()
+			   .subscribe().with(v -> {}, 
+				   t -> logger.error("Failed to send buffered notifications", t));
+		}
+	}
 }

@@ -2027,19 +2027,19 @@ public class EntityService implements CSourceHandler {
 						List<Map<String, Object>> successes = (List<Map<String, Object>>) dbResult.get("success");
 						List<Map<String, String>> fails = (List<Map<String, String>>) dbResult.get("failure");
 						Map<String, List<Map<String, Object>>> oldEntities = Maps.newHashMap();
-
+		
 						for (Map<String, Object> success : successes) {
 							String entityId = (String) success.get("id");
 							Map<String, Object> old = (Map<String, Object>) success.get("old");
-							handleMergePatchDBResult(Map.of("old", old, "new", success.get("new"), "deleted",
-									success.get("deleted"), "updated", success.get("updated")), tenant, entityId);
 							MicroServiceUtils.putIntoIdMap(oldEntities, entityId, old);
 							NGSILDOperationResult opResult = new NGSILDOperationResult(AppConstants.MERGE_PATCH_REQUEST,
 									entityId, tenant);
 							opResult.addSuccess(new CRUDSuccess(null, null, null, Sets.newHashSet()));
 							result.add(opResult);
 						}
+		
 						request.setPrevPayload(oldEntities);
+		
 						for (Map<String, String> fail : fails) {
 							fail.entrySet().forEach(entry -> {
 								String entityId = entry.getKey();
@@ -2054,20 +2054,19 @@ public class EntityService implements CSourceHandler {
 								}
 								result.add(opResult);
 							});
-
 						}
-//						if (!request.getPayload().isEmpty()) {
-//							
-//							try {
-//								microServiceUtils.serializeAndSplitObjectAndEmit(request, messageSize, entityEmitter,
-//										objectMapper);
-//							} catch (ResponseException e) {
-//								return Uni.createFrom().failure(e);
-//							}
-//						}
+		
+						if (!request.getPayload().isEmpty()) {
+							try {
+								microServiceUtils.serializeAndSplitObjectAndEmit(request, messageSize, entityEmitter,
+										objectMapper);
+							} catch (ResponseException e) {
+								return Uni.createFrom().failure(e);
+							}
+						}
 						return Uni.createFrom().item(result);
 					});
-
+		
 			unis.add(0, local);
 		}
 		if (unis.isEmpty()) {

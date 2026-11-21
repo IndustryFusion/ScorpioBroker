@@ -6527,6 +6527,752 @@
 													"response": []
 												}
 											]
+										},
+										{
+											"name": "Merge Patch value objects",
+											"item": [
+												{
+													"name": "Create entity with plain and declared values",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 201\", function () {\r",
+																	"    pm.response.to.have.status(201);\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json",
+																"type": "default"
+															}
+														],
+														"url": {
+															"raw": "{{entity-manager}}/ngsi-ld/v1/entities",
+															"host": [
+																"{{entity-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities"
+															]
+														},
+														"body": {
+															"mode": "raw",
+															"raw": "{\r\n    \"id\": \"urn:test:testentitymergevalueobjects\",\r\n    \"type\": \"TestType\",\r\n    \"doubleproperty\": {\r\n        \"type\": \"Property\",\r\n        \"value\": 42.5\r\n    },\r\n    \"iriproperty\": {\r\n        \"type\": \"Property\",\r\n        \"value\": \"urn:test:oldvalue\"\r\n    },\r\n    \"langproperty\": {\r\n        \"type\": \"Property\",\r\n        \"value\": \"old\"\r\n    },\r\n    \"declareddoubleproperty\": {\r\n        \"type\": \"Property\",\r\n        \"value\": {\r\n            \"@value\": 80,\r\n            \"@type\": \"http://www.w3.org/2001/XMLSchema#double\"\r\n        }\r\n    },\r\n    \"declaredlangproperty\": {\r\n        \"type\": \"Property\",\r\n        \"value\": {\r\n            \"@value\": \"hallo\",\r\n            \"@language\": \"de\"\r\n        }\r\n    }\r\n}"
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Merge declared double into existing attribute",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 204\", function () {\r",
+																	"    pm.response.to.have.status(204);\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "PATCH",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json",
+																"type": "default"
+															}
+														],
+														"url": {
+															"raw": "{{entity-manager}}/ngsi-ld/v1/entities/urn:test:testentitymergevalueobjects",
+															"host": [
+																"{{entity-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitymergevalueobjects"
+															]
+														},
+														"body": {
+															"mode": "raw",
+															"raw": "{\r\n    \"doubleproperty\": {\r\n        \"type\": \"Property\",\r\n        \"value\": {\r\n            \"@value\": 80,\r\n            \"@type\": \"http://www.w3.org/2001/XMLSchema#double\"\r\n        }\r\n    }\r\n}"
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Check declared double into existing attribute",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 200\", function () {\r",
+																	"    pm.response.to.have.status(200);\r",
+																	"});\r",
+																	"pm.test(\"doubleproperty is 80 typed xsd:double\", function () {\r",
+																	"    var value = pm.response.json()[\"doubleproperty\"][\"value\"];\r",
+																	"    pm.expect(value[\"@value\"]).to.eql(80);\r",
+																	"    pm.expect(value[\"type\"] || value[\"@type\"]).to.eql(\"http://www.w3.org/2001/XMLSchema#double\");\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{query-manager}}/ngsi-ld/v1/entities/urn:test:testentitymergevalueobjects",
+															"host": [
+																"{{query-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitymergevalueobjects"
+															]
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Merge IRI value into existing attribute",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 204\", function () {\r",
+																	"    pm.response.to.have.status(204);\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "PATCH",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json",
+																"type": "default"
+															}
+														],
+														"url": {
+															"raw": "{{entity-manager}}/ngsi-ld/v1/entities/urn:test:testentitymergevalueobjects",
+															"host": [
+																"{{entity-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitymergevalueobjects"
+															]
+														},
+														"body": {
+															"mode": "raw",
+															"raw": "{\r\n    \"iriproperty\": {\r\n        \"type\": \"Property\",\r\n        \"value\": {\r\n            \"@id\": \"urn:test:newvalue\"\r\n        }\r\n    }\r\n}"
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Check IRI value into existing attribute",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 200\", function () {\r",
+																	"    pm.response.to.have.status(200);\r",
+																	"});\r",
+																	"pm.test(\"iriproperty is the IRI urn:test:newvalue\", function () {\r",
+																	"    var value = pm.response.json()[\"iriproperty\"][\"value\"];\r",
+																	"    pm.expect(value[\"id\"] || value[\"@id\"]).to.eql(\"urn:test:newvalue\");\r",
+																	"    pm.expect(value).to.not.have.property(\"@value\");\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{query-manager}}/ngsi-ld/v1/entities/urn:test:testentitymergevalueobjects",
+															"host": [
+																"{{query-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitymergevalueobjects"
+															]
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Merge language-tagged string into existing attribute",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 204\", function () {\r",
+																	"    pm.response.to.have.status(204);\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "PATCH",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json",
+																"type": "default"
+															}
+														],
+														"url": {
+															"raw": "{{entity-manager}}/ngsi-ld/v1/entities/urn:test:testentitymergevalueobjects",
+															"host": [
+																"{{entity-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitymergevalueobjects"
+															]
+														},
+														"body": {
+															"mode": "raw",
+															"raw": "{\r\n    \"langproperty\": {\r\n        \"type\": \"Property\",\r\n        \"value\": {\r\n            \"@value\": \"hallo\",\r\n            \"@language\": \"de\"\r\n        }\r\n    }\r\n}"
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Check language-tagged string into existing attribute",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 200\", function () {\r",
+																	"    pm.response.to.have.status(200);\r",
+																	"});\r",
+																	"pm.test(\"langproperty is hallo tagged de\", function () {\r",
+																	"    var value = pm.response.json()[\"langproperty\"][\"value\"];\r",
+																	"    pm.expect(value[\"@value\"]).to.eql(\"hallo\");\r",
+																	"    pm.expect(value[\"@language\"]).to.eql(\"de\");\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{query-manager}}/ngsi-ld/v1/entities/urn:test:testentitymergevalueobjects",
+															"host": [
+																"{{query-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitymergevalueobjects"
+															]
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Merge declared double into new attribute",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 204\", function () {\r",
+																	"    pm.response.to.have.status(204);\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "PATCH",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json",
+																"type": "default"
+															}
+														],
+														"url": {
+															"raw": "{{entity-manager}}/ngsi-ld/v1/entities/urn:test:testentitymergevalueobjects",
+															"host": [
+																"{{entity-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitymergevalueobjects"
+															]
+														},
+														"body": {
+															"mode": "raw",
+															"raw": "{\r\n    \"newdoubleproperty\": {\r\n        \"type\": \"Property\",\r\n        \"value\": {\r\n            \"@value\": 80,\r\n            \"@type\": \"http://www.w3.org/2001/XMLSchema#double\"\r\n        }\r\n    }\r\n}"
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Check declared double into new attribute",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 200\", function () {\r",
+																	"    pm.response.to.have.status(200);\r",
+																	"});\r",
+																	"pm.test(\"newdoubleproperty is 80 typed xsd:double\", function () {\r",
+																	"    var value = pm.response.json()[\"newdoubleproperty\"][\"value\"];\r",
+																	"    pm.expect(value[\"@value\"]).to.eql(80);\r",
+																	"    pm.expect(value[\"type\"] || value[\"@type\"]).to.eql(\"http://www.w3.org/2001/XMLSchema#double\");\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{query-manager}}/ngsi-ld/v1/entities/urn:test:testentitymergevalueobjects",
+															"host": [
+																"{{query-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitymergevalueobjects"
+															]
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Merge IRI value into new attribute",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 204\", function () {\r",
+																	"    pm.response.to.have.status(204);\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "PATCH",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json",
+																"type": "default"
+															}
+														],
+														"url": {
+															"raw": "{{entity-manager}}/ngsi-ld/v1/entities/urn:test:testentitymergevalueobjects",
+															"host": [
+																"{{entity-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitymergevalueobjects"
+															]
+														},
+														"body": {
+															"mode": "raw",
+															"raw": "{\r\n    \"newiriproperty\": {\r\n        \"type\": \"Property\",\r\n        \"value\": {\r\n            \"@id\": \"urn:test:newvalue\"\r\n        }\r\n    }\r\n}"
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Check IRI value into new attribute",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 200\", function () {\r",
+																	"    pm.response.to.have.status(200);\r",
+																	"});\r",
+																	"pm.test(\"newiriproperty is the IRI urn:test:newvalue\", function () {\r",
+																	"    var value = pm.response.json()[\"newiriproperty\"][\"value\"];\r",
+																	"    pm.expect(value[\"id\"] || value[\"@id\"]).to.eql(\"urn:test:newvalue\");\r",
+																	"    pm.expect(value).to.not.have.property(\"@value\");\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{query-manager}}/ngsi-ld/v1/entities/urn:test:testentitymergevalueobjects",
+															"host": [
+																"{{query-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitymergevalueobjects"
+															]
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Merge language-tagged string into new attribute",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 204\", function () {\r",
+																	"    pm.response.to.have.status(204);\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "PATCH",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json",
+																"type": "default"
+															}
+														],
+														"url": {
+															"raw": "{{entity-manager}}/ngsi-ld/v1/entities/urn:test:testentitymergevalueobjects",
+															"host": [
+																"{{entity-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitymergevalueobjects"
+															]
+														},
+														"body": {
+															"mode": "raw",
+															"raw": "{\r\n    \"newlangproperty\": {\r\n        \"type\": \"Property\",\r\n        \"value\": {\r\n            \"@value\": \"hallo\",\r\n            \"@language\": \"de\"\r\n        }\r\n    }\r\n}"
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Check language-tagged string into new attribute",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 200\", function () {\r",
+																	"    pm.response.to.have.status(200);\r",
+																	"});\r",
+																	"pm.test(\"newlangproperty is hallo tagged de\", function () {\r",
+																	"    var value = pm.response.json()[\"newlangproperty\"][\"value\"];\r",
+																	"    pm.expect(value[\"@value\"]).to.eql(\"hallo\");\r",
+																	"    pm.expect(value[\"@language\"]).to.eql(\"de\");\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{query-manager}}/ngsi-ld/v1/entities/urn:test:testentitymergevalueobjects",
+															"host": [
+																"{{query-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitymergevalueobjects"
+															]
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Merge plain number onto declared double",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 204\", function () {\r",
+																	"    pm.response.to.have.status(204);\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "PATCH",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json",
+																"type": "default"
+															}
+														],
+														"url": {
+															"raw": "{{entity-manager}}/ngsi-ld/v1/entities/urn:test:testentitymergevalueobjects",
+															"host": [
+																"{{entity-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitymergevalueobjects"
+															]
+														},
+														"body": {
+															"mode": "raw",
+															"raw": "{\r\n    \"declareddoubleproperty\": {\r\n        \"type\": \"Property\",\r\n        \"value\": 90\r\n    }\r\n}"
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Check plain number onto declared double",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 200\", function () {\r",
+																	"    pm.response.to.have.status(200);\r",
+																	"});\r",
+																	"pm.test(\"declareddoubleproperty is 90 typed xsd:double\", function () {\r",
+																	"    var value = pm.response.json()[\"declareddoubleproperty\"][\"value\"];\r",
+																	"    pm.expect(value[\"@value\"]).to.eql(90);\r",
+																	"    pm.expect(value[\"type\"] || value[\"@type\"]).to.eql(\"http://www.w3.org/2001/XMLSchema#double\");\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{query-manager}}/ngsi-ld/v1/entities/urn:test:testentitymergevalueobjects",
+															"host": [
+																"{{query-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitymergevalueobjects"
+															]
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Merge plain string onto language-tagged string",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 204\", function () {\r",
+																	"    pm.response.to.have.status(204);\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "PATCH",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json",
+																"type": "default"
+															}
+														],
+														"url": {
+															"raw": "{{entity-manager}}/ngsi-ld/v1/entities/urn:test:testentitymergevalueobjects",
+															"host": [
+																"{{entity-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitymergevalueobjects"
+															]
+														},
+														"body": {
+															"mode": "raw",
+															"raw": "{\r\n    \"declaredlangproperty\": {\r\n        \"type\": \"Property\",\r\n        \"value\": \"tschuess\"\r\n    }\r\n}"
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Check plain string onto language-tagged string",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 200\", function () {\r",
+																	"    pm.response.to.have.status(200);\r",
+																	"});\r",
+																	"pm.test(\"declaredlangproperty is tschuess tagged de\", function () {\r",
+																	"    var value = pm.response.json()[\"declaredlangproperty\"][\"value\"];\r",
+																	"    pm.expect(value[\"@value\"]).to.eql(\"tschuess\");\r",
+																	"    pm.expect(value[\"@language\"]).to.eql(\"de\");\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{query-manager}}/ngsi-ld/v1/entities/urn:test:testentitymergevalueobjects",
+															"host": [
+																"{{query-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitymergevalueobjects"
+															]
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Delete entity",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 204\", function () {\r",
+																	"    pm.response.to.have.status(204);\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "DELETE",
+														"header": [],
+														"url": {
+															"raw": "{{entity-manager}}/ngsi-ld/v1/entities/urn:test:testentitymergevalueobjects",
+															"host": [
+																"{{entity-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitymergevalueobjects"
+															]
+														}
+													},
+													"response": []
+												}
+											]
 										}
 									]
 								},
@@ -70067,6 +70813,752 @@
 																"v1",
 																"entityOperations",
 																"delete"
+															]
+														}
+													},
+													"response": []
+												}
+											]
+										},
+										{
+											"name": "Merge batch value objects",
+											"item": [
+												{
+													"name": "Create entity with plain and declared values",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 201\", function () {\r",
+																	"    pm.response.to.have.status(201);\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json",
+																"type": "default"
+															}
+														],
+														"url": {
+															"raw": "{{entity-manager}}/ngsi-ld/v1/entities",
+															"host": [
+																"{{entity-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities"
+															]
+														},
+														"body": {
+															"mode": "raw",
+															"raw": "{\r\n    \"id\": \"urn:test:testentitybatchmergevalueobjects\",\r\n    \"type\": \"TestType\",\r\n    \"doubleproperty\": {\r\n        \"type\": \"Property\",\r\n        \"value\": 42.5\r\n    },\r\n    \"iriproperty\": {\r\n        \"type\": \"Property\",\r\n        \"value\": \"urn:test:oldvalue\"\r\n    },\r\n    \"langproperty\": {\r\n        \"type\": \"Property\",\r\n        \"value\": \"old\"\r\n    },\r\n    \"declareddoubleproperty\": {\r\n        \"type\": \"Property\",\r\n        \"value\": {\r\n            \"@value\": 80,\r\n            \"@type\": \"http://www.w3.org/2001/XMLSchema#double\"\r\n        }\r\n    },\r\n    \"declaredlangproperty\": {\r\n        \"type\": \"Property\",\r\n        \"value\": {\r\n            \"@value\": \"hallo\",\r\n            \"@language\": \"de\"\r\n        }\r\n    }\r\n}"
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Batch merge declared double into existing attribute",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 204\", function () {\r",
+																	"    pm.response.to.have.status(204);\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json",
+																"type": "default"
+															}
+														],
+														"url": {
+															"raw": "{{entity-manager}}/ngsi-ld/v1/entityOperations/merge",
+															"host": [
+																"{{entity-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entityOperations",
+																"merge"
+															]
+														},
+														"body": {
+															"mode": "raw",
+															"raw": "[\r\n    {\r\n        \"id\": \"urn:test:testentitybatchmergevalueobjects\",\r\n        \"type\": \"TestType\",\r\n        \"doubleproperty\": {\r\n            \"type\": \"Property\",\r\n            \"value\": {\r\n                \"@value\": 80,\r\n                \"@type\": \"http://www.w3.org/2001/XMLSchema#double\"\r\n            }\r\n        }\r\n    }\r\n]"
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Check declared double into existing attribute",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 200\", function () {\r",
+																	"    pm.response.to.have.status(200);\r",
+																	"});\r",
+																	"pm.test(\"doubleproperty is 80 typed xsd:double\", function () {\r",
+																	"    var value = pm.response.json()[\"doubleproperty\"][\"value\"];\r",
+																	"    pm.expect(value[\"@value\"]).to.eql(80);\r",
+																	"    pm.expect(value[\"type\"] || value[\"@type\"]).to.eql(\"http://www.w3.org/2001/XMLSchema#double\");\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{query-manager}}/ngsi-ld/v1/entities/urn:test:testentitybatchmergevalueobjects",
+															"host": [
+																"{{query-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitybatchmergevalueobjects"
+															]
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Batch merge IRI value into existing attribute",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 204\", function () {\r",
+																	"    pm.response.to.have.status(204);\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json",
+																"type": "default"
+															}
+														],
+														"url": {
+															"raw": "{{entity-manager}}/ngsi-ld/v1/entityOperations/merge",
+															"host": [
+																"{{entity-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entityOperations",
+																"merge"
+															]
+														},
+														"body": {
+															"mode": "raw",
+															"raw": "[\r\n    {\r\n        \"id\": \"urn:test:testentitybatchmergevalueobjects\",\r\n        \"type\": \"TestType\",\r\n        \"iriproperty\": {\r\n            \"type\": \"Property\",\r\n            \"value\": {\r\n                \"@id\": \"urn:test:newvalue\"\r\n            }\r\n        }\r\n    }\r\n]"
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Check IRI value into existing attribute",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 200\", function () {\r",
+																	"    pm.response.to.have.status(200);\r",
+																	"});\r",
+																	"pm.test(\"iriproperty is the IRI urn:test:newvalue\", function () {\r",
+																	"    var value = pm.response.json()[\"iriproperty\"][\"value\"];\r",
+																	"    pm.expect(value[\"id\"] || value[\"@id\"]).to.eql(\"urn:test:newvalue\");\r",
+																	"    pm.expect(value).to.not.have.property(\"@value\");\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{query-manager}}/ngsi-ld/v1/entities/urn:test:testentitybatchmergevalueobjects",
+															"host": [
+																"{{query-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitybatchmergevalueobjects"
+															]
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Batch merge language-tagged string into existing attribute",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 204\", function () {\r",
+																	"    pm.response.to.have.status(204);\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json",
+																"type": "default"
+															}
+														],
+														"url": {
+															"raw": "{{entity-manager}}/ngsi-ld/v1/entityOperations/merge",
+															"host": [
+																"{{entity-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entityOperations",
+																"merge"
+															]
+														},
+														"body": {
+															"mode": "raw",
+															"raw": "[\r\n    {\r\n        \"id\": \"urn:test:testentitybatchmergevalueobjects\",\r\n        \"type\": \"TestType\",\r\n        \"langproperty\": {\r\n            \"type\": \"Property\",\r\n            \"value\": {\r\n                \"@value\": \"hallo\",\r\n                \"@language\": \"de\"\r\n            }\r\n        }\r\n    }\r\n]"
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Check language-tagged string into existing attribute",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 200\", function () {\r",
+																	"    pm.response.to.have.status(200);\r",
+																	"});\r",
+																	"pm.test(\"langproperty is hallo tagged de\", function () {\r",
+																	"    var value = pm.response.json()[\"langproperty\"][\"value\"];\r",
+																	"    pm.expect(value[\"@value\"]).to.eql(\"hallo\");\r",
+																	"    pm.expect(value[\"@language\"]).to.eql(\"de\");\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{query-manager}}/ngsi-ld/v1/entities/urn:test:testentitybatchmergevalueobjects",
+															"host": [
+																"{{query-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitybatchmergevalueobjects"
+															]
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Batch merge declared double into new attribute",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 204\", function () {\r",
+																	"    pm.response.to.have.status(204);\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json",
+																"type": "default"
+															}
+														],
+														"url": {
+															"raw": "{{entity-manager}}/ngsi-ld/v1/entityOperations/merge",
+															"host": [
+																"{{entity-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entityOperations",
+																"merge"
+															]
+														},
+														"body": {
+															"mode": "raw",
+															"raw": "[\r\n    {\r\n        \"id\": \"urn:test:testentitybatchmergevalueobjects\",\r\n        \"type\": \"TestType\",\r\n        \"newdoubleproperty\": {\r\n            \"type\": \"Property\",\r\n            \"value\": {\r\n                \"@value\": 80,\r\n                \"@type\": \"http://www.w3.org/2001/XMLSchema#double\"\r\n            }\r\n        }\r\n    }\r\n]"
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Check declared double into new attribute",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 200\", function () {\r",
+																	"    pm.response.to.have.status(200);\r",
+																	"});\r",
+																	"pm.test(\"newdoubleproperty is 80 typed xsd:double\", function () {\r",
+																	"    var value = pm.response.json()[\"newdoubleproperty\"][\"value\"];\r",
+																	"    pm.expect(value[\"@value\"]).to.eql(80);\r",
+																	"    pm.expect(value[\"type\"] || value[\"@type\"]).to.eql(\"http://www.w3.org/2001/XMLSchema#double\");\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{query-manager}}/ngsi-ld/v1/entities/urn:test:testentitybatchmergevalueobjects",
+															"host": [
+																"{{query-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitybatchmergevalueobjects"
+															]
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Batch merge IRI value into new attribute",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 204\", function () {\r",
+																	"    pm.response.to.have.status(204);\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json",
+																"type": "default"
+															}
+														],
+														"url": {
+															"raw": "{{entity-manager}}/ngsi-ld/v1/entityOperations/merge",
+															"host": [
+																"{{entity-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entityOperations",
+																"merge"
+															]
+														},
+														"body": {
+															"mode": "raw",
+															"raw": "[\r\n    {\r\n        \"id\": \"urn:test:testentitybatchmergevalueobjects\",\r\n        \"type\": \"TestType\",\r\n        \"newiriproperty\": {\r\n            \"type\": \"Property\",\r\n            \"value\": {\r\n                \"@id\": \"urn:test:newvalue\"\r\n            }\r\n        }\r\n    }\r\n]"
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Check IRI value into new attribute",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 200\", function () {\r",
+																	"    pm.response.to.have.status(200);\r",
+																	"});\r",
+																	"pm.test(\"newiriproperty is the IRI urn:test:newvalue\", function () {\r",
+																	"    var value = pm.response.json()[\"newiriproperty\"][\"value\"];\r",
+																	"    pm.expect(value[\"id\"] || value[\"@id\"]).to.eql(\"urn:test:newvalue\");\r",
+																	"    pm.expect(value).to.not.have.property(\"@value\");\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{query-manager}}/ngsi-ld/v1/entities/urn:test:testentitybatchmergevalueobjects",
+															"host": [
+																"{{query-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitybatchmergevalueobjects"
+															]
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Batch merge language-tagged string into new attribute",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 204\", function () {\r",
+																	"    pm.response.to.have.status(204);\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json",
+																"type": "default"
+															}
+														],
+														"url": {
+															"raw": "{{entity-manager}}/ngsi-ld/v1/entityOperations/merge",
+															"host": [
+																"{{entity-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entityOperations",
+																"merge"
+															]
+														},
+														"body": {
+															"mode": "raw",
+															"raw": "[\r\n    {\r\n        \"id\": \"urn:test:testentitybatchmergevalueobjects\",\r\n        \"type\": \"TestType\",\r\n        \"newlangproperty\": {\r\n            \"type\": \"Property\",\r\n            \"value\": {\r\n                \"@value\": \"hallo\",\r\n                \"@language\": \"de\"\r\n            }\r\n        }\r\n    }\r\n]"
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Check language-tagged string into new attribute",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 200\", function () {\r",
+																	"    pm.response.to.have.status(200);\r",
+																	"});\r",
+																	"pm.test(\"newlangproperty is hallo tagged de\", function () {\r",
+																	"    var value = pm.response.json()[\"newlangproperty\"][\"value\"];\r",
+																	"    pm.expect(value[\"@value\"]).to.eql(\"hallo\");\r",
+																	"    pm.expect(value[\"@language\"]).to.eql(\"de\");\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{query-manager}}/ngsi-ld/v1/entities/urn:test:testentitybatchmergevalueobjects",
+															"host": [
+																"{{query-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitybatchmergevalueobjects"
+															]
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Batch merge plain number onto declared double",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 204\", function () {\r",
+																	"    pm.response.to.have.status(204);\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json",
+																"type": "default"
+															}
+														],
+														"url": {
+															"raw": "{{entity-manager}}/ngsi-ld/v1/entityOperations/merge",
+															"host": [
+																"{{entity-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entityOperations",
+																"merge"
+															]
+														},
+														"body": {
+															"mode": "raw",
+															"raw": "[\r\n    {\r\n        \"id\": \"urn:test:testentitybatchmergevalueobjects\",\r\n        \"type\": \"TestType\",\r\n        \"declareddoubleproperty\": {\r\n            \"type\": \"Property\",\r\n            \"value\": 90\r\n        }\r\n    }\r\n]"
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Check plain number onto declared double",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 200\", function () {\r",
+																	"    pm.response.to.have.status(200);\r",
+																	"});\r",
+																	"pm.test(\"declareddoubleproperty is 90 typed xsd:double\", function () {\r",
+																	"    var value = pm.response.json()[\"declareddoubleproperty\"][\"value\"];\r",
+																	"    pm.expect(value[\"@value\"]).to.eql(90);\r",
+																	"    pm.expect(value[\"type\"] || value[\"@type\"]).to.eql(\"http://www.w3.org/2001/XMLSchema#double\");\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{query-manager}}/ngsi-ld/v1/entities/urn:test:testentitybatchmergevalueobjects",
+															"host": [
+																"{{query-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitybatchmergevalueobjects"
+															]
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Batch merge plain string onto language-tagged string",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 204\", function () {\r",
+																	"    pm.response.to.have.status(204);\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json",
+																"type": "default"
+															}
+														],
+														"url": {
+															"raw": "{{entity-manager}}/ngsi-ld/v1/entityOperations/merge",
+															"host": [
+																"{{entity-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entityOperations",
+																"merge"
+															]
+														},
+														"body": {
+															"mode": "raw",
+															"raw": "[\r\n    {\r\n        \"id\": \"urn:test:testentitybatchmergevalueobjects\",\r\n        \"type\": \"TestType\",\r\n        \"declaredlangproperty\": {\r\n            \"type\": \"Property\",\r\n            \"value\": \"tschuess\"\r\n        }\r\n    }\r\n]"
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Check plain string onto language-tagged string",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 200\", function () {\r",
+																	"    pm.response.to.have.status(200);\r",
+																	"});\r",
+																	"pm.test(\"declaredlangproperty is tschuess tagged de\", function () {\r",
+																	"    var value = pm.response.json()[\"declaredlangproperty\"][\"value\"];\r",
+																	"    pm.expect(value[\"@value\"]).to.eql(\"tschuess\");\r",
+																	"    pm.expect(value[\"@language\"]).to.eql(\"de\");\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{query-manager}}/ngsi-ld/v1/entities/urn:test:testentitybatchmergevalueobjects",
+															"host": [
+																"{{query-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitybatchmergevalueobjects"
+															]
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Delete entity",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 204\", function () {\r",
+																	"    pm.response.to.have.status(204);\r",
+																	"});\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "DELETE",
+														"header": [],
+														"url": {
+															"raw": "{{entity-manager}}/ngsi-ld/v1/entities/urn:test:testentitybatchmergevalueobjects",
+															"host": [
+																"{{entity-manager}}"
+															],
+															"path": [
+																"ngsi-ld",
+																"v1",
+																"entities",
+																"urn:test:testentitybatchmergevalueobjects"
 															]
 														}
 													},

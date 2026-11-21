@@ -1,5 +1,7 @@
 package eu.neclab.ngsildbroker.historyquerymanager.controller;
 
+import jakarta.annotation.security.RolesAllowed;
+
 import com.github.jsonldjava.core.JsonLDService;
 
 import eu.neclab.ngsildbroker.commons.constants.AppConstants;
@@ -73,6 +75,7 @@ public class HistoryController {
 	@Counted(name = "temp_entity_query_total", description = "Total number of temp entity query requests", absolute = true)
 	@Timed(name = "temp_entity_query_duration", description = "Duration of temp entity query requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "temp_entity_query_concurrent", description = "Number of concurrent temp entity query requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> queryTemporalEntities(HttpServerRequest request, @QueryParam("id") String ids,
 			@QueryParam("type") String typeQuery, @QueryParam("idPattern") String idPattern,
 			@QueryParam("attrs") String attrs, @QueryParam("q") String qInput, @QueryParam("csf") String csf,
@@ -215,6 +218,7 @@ public class HistoryController {
 	@Counted(name = "temp_entity_retrieve_total", description = "Total number of temp entity retrieve requests", absolute = true)
 	@Timed(name = "temp_entity_retrieve_duration", description = "Duration of temp entity retrieve requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "temp_entity_retrieve_concurrent", description = "Number of concurrent temp entity retrieve requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> retrieveTemporalEntity(HttpServerRequest request,
 			@PathParam("entityId") String entityId, @QueryParam("attrs") String attrs,
 			@QueryParam("aggrMethods") String aggrMethods, @QueryParam("aggrPeriodDuration") String aggrPeriodDuration,

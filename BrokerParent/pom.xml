@@ -246,6 +246,20 @@
 			<artifactId>quarkus-systemd-notify</artifactId>
 			<version>1.0.2</version>
 		</dependency>
+		<!-- IndustryFusion: tokens and platform roles on every endpoint
+		     (contracts/context-broker: Requests need a token with a platform role) -->
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-oidc</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-keycloak-authorization</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.annotation</groupId>
+			<artifactId>jakarta.annotation-api</artifactId>
+		</dependency>
 	</dependencies>
 	<profiles>
 		<profile>

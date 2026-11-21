@@ -1,5 +1,7 @@
 package eu.neclab.ngsildbroker.entityhandler.controller;
 
+import jakarta.annotation.security.RolesAllowed;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +77,7 @@ public class EntityController {// implements EntityHandlerInterface {
 	@Counted(name = "entity_create_total", description = "Total number of entity create requests", absolute = true)
 	@Timed(name = "entity_create_duration", description = "Duration of entity create requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "entity_create_concurrent", description = "Number of concurrent entity create requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Writer"})
 	public Uni<RestResponse<Object>> createEntity(HttpServerRequest req, String bodyStr) {
 
 		Map<String, Object> body;
@@ -126,6 +129,7 @@ public class EntityController {// implements EntityHandlerInterface {
 	@Counted(name = "entity_patch_total", description = "Total number of entity patch requests", absolute = true)
 	@Timed(name = "entity_patch_duration", description = "Duration of entity patch requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "entity_patch_concurrent", description = "Number of concurrent entity patch requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Editor", "Factory-Writer"})
 	public Uni<RestResponse<Object>> updateEntity(HttpServerRequest req, @PathParam("entityId") String entityId,
 			String bodyStr) {
 		Map<String, Object> body;
@@ -175,6 +179,7 @@ public class EntityController {// implements EntityHandlerInterface {
 	@Counted(name = "entity_update_total", description = "Total number of entity update requests", absolute = true)
 	@Timed(name = "entity_update_duration", description = "Duration of entity update requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "entity_update_concurrent", description = "Number of concurrent entity update requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Writer"})
 	public Uni<RestResponse<Object>> appendEntity(HttpServerRequest req, @PathParam("entityId") String entityId,
 			String bodyStr, @QueryParam("options") String options) {
 		Map<String, Object> body;
@@ -225,6 +230,7 @@ public class EntityController {// implements EntityHandlerInterface {
 	@Counted(name = "attrs_patch_total", description = "Total number of attrs patch requests", absolute = true)
 	@Timed(name = "attrs_patch_duration", description = "Duration of attrs patch requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "attrs_patch_concurrent", description = "Number of concurrent attrs patch requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Editor", "Factory-Writer"})
 	public Uni<RestResponse<Object>> partialUpdateAttribute(HttpServerRequest req,
 			@PathParam("entityId") String entityId, @PathParam("attrId") String attrib, String bodyStr) {
 
@@ -294,6 +300,7 @@ public class EntityController {// implements EntityHandlerInterface {
 	@Counted(name = "attrs_delete_total", description = "Total number of attrs delete requests", absolute = true)
 	@Timed(name = "attrs_delete_duration", description = "Duration of attrs delete requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "attrs_delete_concurrent", description = "Number of concurrent attrs delete requests", absolute = true)
+	@RolesAllowed("Factory-Admin")
 	public Uni<RestResponse<Object>> deleteAttribute(HttpServerRequest request, @PathParam("entityId") String entityId,
 			@PathParam("attrId") String attrId, @QueryParam("datasetId") String datasetId,
 			@QueryParam("deleteAll") String deleteAllS) {
@@ -338,6 +345,7 @@ public class EntityController {// implements EntityHandlerInterface {
 	@Counted(name = "entity_delete_total", description = "Total number of entity delete requests", absolute = true)
 	@Timed(name = "entity_delete_duration", description = "Duration of entity delete requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "entity_delete_concurrent", description = "Number of concurrent entity delete requests", absolute = true)
+	@RolesAllowed("Factory-Admin")
 	public Uni<RestResponse<Object>> deleteEntity(HttpServerRequest request, @PathParam("entityId") String entityId) {
 		try {
 			HttpUtils.validateUri(entityId);
@@ -367,6 +375,7 @@ public class EntityController {// implements EntityHandlerInterface {
 	@Counted(name = "entity_merge_patch_total", description = "Total number of entity merge patch requests", absolute = true)
 	@Timed(name = "entity_merge_patch_duration", description = "Duration of entity merge patch requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "entity_merge_patch_concurrent", description = "Number of concurrent entity merge patch requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Editor", "Factory-Writer"})
 	public Uni<RestResponse<Object>> mergePatchPure(HttpServerRequest request,
 			String bodyStr) {
 		String id;
@@ -384,6 +393,7 @@ public class EntityController {// implements EntityHandlerInterface {
 	@Counted(name = "entity_merge_patch_total", description = "Total number of entity merge patch requests", absolute = true)
 	@Timed(name = "entity_merge_patch_duration", description = "Duration of entity merge patch requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "entity_merge_patch_concurrent", description = "Number of concurrent entity merge patch requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Editor", "Factory-Writer"})
 	public Uni<RestResponse<Object>> mergePatch(HttpServerRequest request, @PathParam("entityId") String entityId,
 			String bodyStr) {
 		Map<String, Object> body;
@@ -429,6 +439,7 @@ public class EntityController {// implements EntityHandlerInterface {
 	@Counted(name = "entity_replace_total", description = "Total number of entity replace requests", absolute = true)
 	@Timed(name = "entity_replace_duration", description = "Duration of entity replace requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "entity_replace_concurrent", description = "Number of concurrent entity replace requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Editor", "Factory-Writer"})
 	public Uni<RestResponse<Object>> replaceEntity(@PathParam("entityId") String entityId, HttpServerRequest request,
 			String bodyStr) {
 		logger.debug("replacing entity");
@@ -479,6 +490,7 @@ public class EntityController {// implements EntityHandlerInterface {
 	@Counted(name = "attrs_replace_total", description = "Total number of attrs replace requests", absolute = true)
 	@Timed(name = "attrs_replace_duration", description = "Duration of attrs replace requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "attrs_replace_concurrent", description = "Number of concurrent attrs replace requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Editor", "Factory-Writer"})
 	public Uni<RestResponse<Object>> replaceAttribute(@PathParam("attrId") String attrId,
 			@PathParam("entityId") String entityId, HttpServerRequest request, String bodyStr) {
 		logger.debug("replacing Attrs");

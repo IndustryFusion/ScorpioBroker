@@ -1,5 +1,7 @@
 package eu.neclab.ngsildbroker.infomanager.controller;
 
+import jakarta.annotation.security.RolesAllowed;
+
 import com.google.common.collect.Maps;
 import eu.neclab.ngsildbroker.commons.constants.NGSIConstants;
 import eu.neclab.ngsildbroker.commons.tools.HttpUtils;
@@ -23,6 +25,7 @@ public class InfoController {
 
 	@GET
 	@Path("/sourceIdentity")
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> getSourceIdentity(HttpServerRequest request) {
 		String sourceAlias = microServiceUtils.getGatewayString() + HttpUtils.getTenant(request);
 		Map<String, Object> sourceIdentity = Maps.newHashMap();

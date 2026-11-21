@@ -1,5 +1,7 @@
 package eu.neclab.ngsildbroker.historyentitymanager.controller;
 
+import jakarta.annotation.security.RolesAllowed;
+
 import java.util.Map;
 
 import jakarta.inject.Inject;
@@ -51,6 +53,7 @@ public class HistoryController {
 	@Counted(name = "temp_entity_create_total", description = "Total number of temp entity create requests", absolute = true)
 	@Timed(name = "temp_entity_create_duration", description = "Duration of temp entity create requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "temp_entity_create_concurrent", description = "Number of concurrent temp entity create requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Writer"})
 	public Uni<RestResponse<Object>> createTemporalEntity(HttpServerRequest request, String body) {
 		Map<String, Object> payload;
 		try {
@@ -76,6 +79,7 @@ public class HistoryController {
 	@Counted(name = "temp_entity_delete_total", description = "Total number of temp entity delete requests", absolute = true)
 	@Timed(name = "temp_entity_delete_duration", description = "Duration of temp entity delete requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "temp_entity_delete_concurrent", description = "Number of concurrent temp entity delete requests", absolute = true)
+	@RolesAllowed("Factory-Admin")
 	public Uni<RestResponse<Object>> deleteTemporalEntityById(HttpServerRequest request,
 			@PathParam("entityId") String entityId) {
 		try {
@@ -96,6 +100,7 @@ public class HistoryController {
 	@Counted(name = "temp_entity_add_attrs_total", description = "Total number of temp entity add attrs requests", absolute = true)
 	@Timed(name = "temp_entity_add_attrs_duration", description = "Duration of temp entity add attrs requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "temp_entity_add_attrs_concurrent", description = "Number of concurrent temp entity add attrs requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Writer"})
 	public Uni<RestResponse<Object>> addAttrib2TemopralEntity(HttpServerRequest request,
 			@PathParam("entityId") String entityId, String body) {
 		Map<String, Object> payload;
@@ -121,6 +126,7 @@ public class HistoryController {
 	@Counted(name = "temp_entity_delete_attrs_total", description = "Total number of temp entity delete attrs requests", absolute = true)
 	@Timed(name = "temp_entity_delete_attrs_duration", description = "Duration of temp entity delete attrs requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "temp_entity_delete_attrs_concurrent", description = "Number of concurrent temp entity delete attrs requests", absolute = true)
+	@RolesAllowed("Factory-Admin")
 	public Uni<RestResponse<Object>> deleteAttrib2TemporalEntity(HttpServerRequest request,
 			@PathParam("entityId") String entityId, @PathParam("attrId") String attrId,
 			@QueryParam("datasetId") String datasetId, @QueryParam("deleteAll") String deleteAllS) {
@@ -146,6 +152,7 @@ public class HistoryController {
 	@Counted(name = "temp_entity_patch_attrs_instance_total", description = "Total number of temp entity attrs instance patch requests", absolute = true)
 	@Timed(name = "temp_entity_patch_attrs_instance_duration", description = "Duration of temp entity attrs instance patch requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "temp_entity_patch_attrs_instance_concurrent", description = "Number of concurrent temp entity attrs instance patch requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Editor", "Factory-Writer"})
 	public Uni<RestResponse<Object>> modifyAttribInstanceTemporalEntity(HttpServerRequest request,
 			@PathParam("entityId") String entityId, @PathParam("attrId") String attrId,
 			@PathParam("instanceId") String instanceId, String body) {
@@ -176,6 +183,7 @@ public class HistoryController {
 	@Counted(name = "temp_entity_delete_attrs_instance_total", description = "Total number of temp entity attrs instance delete requests", absolute = true)
 	@Timed(name = "temp_entity_delete_attrs_instance_duration", description = "Duration of temp entity attrs instance delete requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "temp_entity_delete_attrs_instance_concurrent", description = "Number of concurrent temp entity attrs instance delete requests", absolute = true)
+	@RolesAllowed("Factory-Admin")
 	public Uni<RestResponse<Object>> deleteAtrribInstanceTemporalEntity(HttpServerRequest request,
 			@PathParam("entityId") String entityId, @PathParam("attrId") String attrId,
 			@PathParam("instanceId") String instanceId) {

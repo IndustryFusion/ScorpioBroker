@@ -1,5 +1,7 @@
 package eu.neclab.ngsildbroker.queryhandler.controller;
 
+import jakarta.annotation.security.RolesAllowed;
+
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -103,6 +105,7 @@ public class QueryController {
 	@Counted(name = "entity_retrieve_total", description = "Total number of entity retrieve requests", absolute = true)
 	@Timed(name = "entity_retrieve_duration", description = "Duration of entity retrieve requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "entity_retrieve_concurrent", description = "Number of concurrent entity retrieve requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> getEntity(HttpServerRequest request, @QueryParam(value = "attrs") String attrs,
 			@QueryParam(value = "options") String options, @QueryParam(value = "lang") String lang,
 			@QueryParam(value = "geometryProperty") String geometryProperty,
@@ -156,6 +159,7 @@ public class QueryController {
 	@Counted(name = "entity_queries_total", description = "Total number of entity query requests", absolute = true)
 	@Timed(name = "entity_query_duration", description = "Duration of entity query requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "entity_queries_concurrent", description = "Number of concurrent entity query requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> query(HttpServerRequest request,
 			@QueryParam(NGSIConstants.QUERY_PARAMETER_ID) String id,
 			@QueryParam(NGSIConstants.QUERY_PARAMETER_TYPE) String typeQuery,
@@ -244,6 +248,7 @@ public class QueryController {
 	@Counted(name = "types_total", description = "Total number of types requests", absolute = true)
 	@Timed(name = "types_duration", description = "Duration of types requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "types_concurrent", description = "Number of concurrent types requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> getAllTypes(HttpServerRequest request,
 			@QueryParam(NGSIConstants.QUERY_PARAMETER_DETAILS) String detailsS,
 			@QueryParam(NGSIConstants.QUERY_PARAMETER_LOCAL_ONLY) String localOnlyS,
@@ -292,6 +297,7 @@ public class QueryController {
 	@Counted(name = "types_type_total", description = "Total number of type requests", absolute = true)
 	@Timed(name = "types_type_duration", description = "Duration of type requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "types_type_concurrent", description = "Number of concurrent type requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> getType(HttpServerRequest request, @PathParam("entityType") String type,
 			@QueryParam(NGSIConstants.QUERY_PARAMETER_LOCAL_ONLY) String localOnlyS) {
 		logger.debug("getType");
@@ -326,6 +332,7 @@ public class QueryController {
 	@Counted(name = "attributes_total", description = "Total number of attributes requests", absolute = true)
 	@Timed(name = "attributes_duration", description = "Duration of attributes requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "attributes_concurrent", description = "Number of concurrent attributes requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> getAllAttributes(HttpServerRequest request,
 			@QueryParam(NGSIConstants.QUERY_PARAMETER_DETAILS) String detailsS,
 			@QueryParam(NGSIConstants.QUERY_PARAMETER_LOCAL_ONLY) String localOnlyS) {
@@ -367,6 +374,7 @@ public class QueryController {
 	@Counted(name = "attributes_attribute_total", description = "Total number of attribute requests", absolute = true)
 	@Timed(name = "attributes_attribute_duration", description = "Duration of attribute requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "attributes_attribute_concurrent", description = "Number of concurrent attribute requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> getAttribute(HttpServerRequest request, @PathParam("attribute") String attribute,
 			@QueryParam(NGSIConstants.QUERY_PARAMETER_DETAILS) String detailsS,
 			@QueryParam(NGSIConstants.QUERY_PARAMETER_LOCAL_ONLY) String localOnlyS) {

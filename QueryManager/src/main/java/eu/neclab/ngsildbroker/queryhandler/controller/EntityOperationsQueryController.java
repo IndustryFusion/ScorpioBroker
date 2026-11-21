@@ -1,5 +1,7 @@
 package eu.neclab.ngsildbroker.queryhandler.controller;
 
+import jakarta.annotation.security.RolesAllowed;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -80,6 +82,7 @@ public class EntityOperationsQueryController {
 	@Counted(name = "batch_entity_queries_total", description = "Total number of entity batch query requests", absolute = true)
 	@Timed(name = "batch_entity_query_duration", description = "Duration of entity batch query requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "batch_entity_queries_concurrent", description = "Number of concurrent entity batch query requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> postQuery(HttpServerRequest request, String bodyStr,
 			@QueryParam(value = "limit") Integer limit, @QueryParam(value = "offset") int offset,
 			@QueryParam(value = "options") String options, @QueryParam(value = "count") String countS,

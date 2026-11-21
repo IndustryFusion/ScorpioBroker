@@ -1,5 +1,7 @@
 package eu.neclab.ngsildbroker.entityhandler.controller;
 
+import jakarta.annotation.security.RolesAllowed;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -71,6 +73,7 @@ public class BulkController {
 	@POST
 	@Path("/bulkinsert")
 	@Blocking
+	@RolesAllowed({"Factory-Admin", "Factory-Writer"})
 	public RestResponse<Object> bulkInsert(HttpServerRequest request, @QueryParam("trigger") String triggerS,
 			InputStream body) {
 		String tenant = HttpUtils.getTenant(request);

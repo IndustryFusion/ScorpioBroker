@@ -1,5 +1,7 @@
 package eu.neclab.ngsildbroker.historyquerymanager.controller;
 
+import jakarta.annotation.security.RolesAllowed;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +81,7 @@ public class HistoryOperationsController {
 	@Counted(name = "temp_entity_batch_query_total", description = "Total number of temp entity batch query requests", absolute = true)
 	@Timed(name = "temp_entity_batch_query_duration", description = "Duration of temp entity batch query requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "temp_entity_batch_query_concurrent", description = "Number of concurrent temp entity batch query requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> postQuery(HttpServerRequest request, String bodyStr,
 			@QueryParam(value = "limit") Integer limit, @QueryParam(value = "offset") int offset,
 			@QueryParam("lastN") @DefaultValue("-1") int lastN, @QueryParam(value = "options") String options,

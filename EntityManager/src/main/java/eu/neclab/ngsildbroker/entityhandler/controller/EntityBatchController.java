@@ -1,5 +1,7 @@
 package eu.neclab.ngsildbroker.entityhandler.controller;
 
+import jakarta.annotation.security.RolesAllowed;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -82,6 +84,7 @@ public class EntityBatchController {
 	@Counted(name = "entity_batch_create_total", description = "Total number of entity batch create requests", absolute = true)
 	@Timed(name = "entity_batch_create_duration", description = "Duration of entity batch create requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "entity_batch_create_concurrent", description = "Number of concurrent entity batch create requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Writer"})
 	public Uni<RestResponse<Object>> createMultiple(HttpServerRequest request, String body,
 			@QueryParam("localOnly") String localOnlyS) {
 		List<Uni<Tuple2<String, Object>>> unis = Lists.newArrayList();
@@ -171,6 +174,7 @@ public class EntityBatchController {
 	@Counted(name = "entity_batch_upsert_total", description = "Total number of entity batch upsert requests", absolute = true)
 	@Timed(name = "entity_batch_upsert_duration", description = "Duration of entity batch upsert requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "entity_batch_upsert_concurrent", description = "Number of concurrent entity batch upsert requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Editor", "Factory-Writer"})
 	public Uni<RestResponse<Object>> upsertMultiple(HttpServerRequest request, String body,
 			@QueryParam(value = "options") String options, @QueryParam("localOnly") String localOnlyS) {
 		boolean localOnly;
@@ -264,6 +268,7 @@ public class EntityBatchController {
 	@Counted(name = "entity_batch_update_total", description = "Total number of entity batch update requests", absolute = true)
 	@Timed(name = "entity_batch_update_duration", description = "Duration of entity batch update requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "entity_batch_update_concurrent", description = "Number of concurrent entity batch update requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Editor", "Factory-Writer"})
 	public Uni<RestResponse<Object>> appendMultiple(HttpServerRequest request, String body,
 			@QueryParam(value = "options") String options, @QueryParam("localOnly") String localOnlyS) {
 		List<Map<String, Object>> compactedEntities;
@@ -342,6 +347,7 @@ public class EntityBatchController {
 	@Counted(name = "entity_batch_delete_total", description = "Total number of entity batch delete requests", absolute = true)
 	@Timed(name = "entity_batch_delete_duration", description = "Duration of entity batch delete requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "entity_batch_delete_concurrent", description = "Number of concurrent entity batch delete requests", absolute = true)
+	@RolesAllowed("Factory-Admin")
 	public Uni<RestResponse<Object>> deleteMultiple(HttpServerRequest request, String entityIdsStr,
 			@QueryParam("localOnly") String localOnlyS) {
 		String tenant = HttpUtils.getTenant(request);
@@ -380,6 +386,7 @@ public class EntityBatchController {
 	@Counted(name = "entity_batch_merge_total", description = "Total number of entity batch merge requests", absolute = true)
 	@Timed(name = "entity_batch_merge_duration", description = "Duration of entity batch merge requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "entity_batch_merge_concurrent", description = "Number of concurrent entity batch merge requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Editor", "Factory-Writer"})
 	public Uni<RestResponse<Object>> mergeMultiple(HttpServerRequest request, String body,
 			@QueryParam(value = "options") String options, @QueryParam("localOnly") String localOnlyS) {
 		List<Map<String, Object>> compactedEntities;

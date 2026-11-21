@@ -1,5 +1,7 @@
 package eu.neclab.ngsildbroker.subscriptionmanager.controller;
 
+import jakarta.annotation.security.RolesAllowed;
+
 import com.github.jsonldjava.core.Context;
 import com.github.jsonldjava.core.JsonLDService;
 import com.google.common.collect.Lists;
@@ -62,6 +64,7 @@ public class SubscriptionController {
 	JsonLDService ldService;
 
 	@POST
+	@RolesAllowed({"Factory-Admin", "Subscriber"})
 	public Uni<RestResponse<Object>> subscribe(HttpServerRequest request, String body) {
 		Map<String, Object> map;
 		String tenant = HttpUtils.getTenant(request);
@@ -126,6 +129,7 @@ public class SubscriptionController {
 	@Counted(name = "retrieve_all_subscriptions_total", description = "Total number of retrieve all subscriptions requests", absolute = true)
 	@Timed(name = "retrieve_all_subscriptions_duration", description = "Duration of retrieve all subscriptions requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "retrieve_all_subscriptions_concurrent", description = "Number of concurrent retrieve all subscriptions requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Reader"})
 	public Uni<RestResponse<Object>> getAllSubscriptions(HttpServerRequest request, @QueryParam("limit") Integer limit,
 			@QueryParam("offset") int offset, @QueryParam("options") String options) {
 		int acceptHeader = HttpUtils.parseAcceptHeader(request.headers().getAll("Accept"));
@@ -204,6 +208,7 @@ public class SubscriptionController {
 	@Counted(name = "retrieve_subscription_total", description = "Total number of retrieve subscription requests", absolute = true)
 	@Timed(name = "retrieve_subscription_duration", description = "Duration of retrieve subscription requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "retrieve_subscription_concurrent", description = "Number of concurrent retrieve subscription requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Subscriber"})
 	public Uni<RestResponse<Object>> getSubscriptionById(HttpServerRequest request,
 			@PathParam(value = "id") String subscriptionId, @QueryParam(value = "options") String options) {
 		int acceptHeader = HttpUtils.parseAcceptHeader(request.headers().getAll("Accept"));
@@ -242,6 +247,7 @@ public class SubscriptionController {
 	@Counted(name = "delete_subscription_total", description = "Total number of delete subscription requests", absolute = true)
 	@Timed(name = "delete_subscription_duration", description = "Duration of delete subscription requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "delete_subscription_concurrent", description = "Number of concurrent delete subscription requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Subscriber"})
 	public Uni<RestResponse<Object>> deleteSubscription(HttpServerRequest request, @PathParam(value = "id") String id) {
 		String tenant = HttpUtils.getTenant(request);
 		try {
@@ -261,6 +267,7 @@ public class SubscriptionController {
 	@Counted(name = "patch_subscription_total", description = "Total number of patch subscription requests", absolute = true)
 	@Timed(name = "patch_subscription_duration", description = "Duration of patch subscription requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "patch_subscription_concurrent", description = "Number of concurrent patch subscription requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Subscriber"})
 	public Uni<RestResponse<Object>> updateSubscription(HttpServerRequest request, @PathParam(value = "id") String id,
 			String body) {
 		Map<String, Object> map;

@@ -332,6 +332,11 @@ public class EntityBatchController {
 			List<NGSILDOperationResult> fails = tuple.getItem1();
 			List<Map<String, Object>> expandedEntities = tuple.getItem2();
 			List<Context> contexts = tuple.getItem3();
+			// IndustryFusion: when no entity of the batch could be expanded, answer with the refusals
+			// (207, CIM 009 6.16.3.1) instead of updating nothing, which answered 404
+			if (expandedEntities.isEmpty() && !fails.isEmpty()) {
+				return Uni.createFrom().item(HttpUtils.generateBatchResult(fails));
+			}
 			return entityService.appendBatch(tenant, expandedEntities, contexts, localOnly,
 					isNoOverwrite, request.headers(), viaHeaders).onItem().transform(opResults -> {
 						opResults.addAll(fails);
@@ -449,6 +454,11 @@ public class EntityBatchController {
 			List<NGSILDOperationResult> fails = tuple.getItem1();
 			List<Map<String, Object>> expandedEntities = tuple.getItem2();
 			List<Context> contexts = tuple.getItem3();
+			// IndustryFusion: when no entity of the batch could be expanded, answer with the refusals
+			// (207, CIM 009 6.31.3.1) instead of merging nothing, which answered 404
+			if (expandedEntities.isEmpty() && !fails.isEmpty()) {
+				return Uni.createFrom().item(HttpUtils.generateBatchResult(fails));
+			}
 			return entityService.mergeBatch(tenant, expandedEntities, contexts, localOnly,
 					isNoOverwrite, request.headers(), viaHeaders).onItem().transform(opResults -> {
 						opResults.addAll(fails);

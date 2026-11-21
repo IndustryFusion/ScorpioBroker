@@ -824,8 +824,27 @@ class NGSIObject {
 		}
 	}
 
+	/**
+	 * IndustryFusion: whether an expanded datasetId value is the JSON-LD keyword
+	 * "@none", which CIM 009 4.5.5 defines as the datasetId of the default
+	 * Attribute instance. Accepts the expanded value itself ({"@id": "@none"}) and
+	 * the list holding it.
+	 */
+	static boolean isDefaultDatasetId(Object expandedValue) {
+		if (expandedValue instanceof List<?> list) {
+			return list.size() == 1 && isDefaultDatasetId(list.get(0));
+		}
+		return expandedValue instanceof Map<?, ?> map && map.size() == 1
+				&& NGSIConstants.JSON_LD_NONE.equals(map.get(JsonLdConsts.ID));
+	}
+
 	private void validateAndAddDatasetId() throws ResponseException {
 		String dataSetId = ((Map<String, String>) element).get(JsonLdConsts.ID);
+		if (isDefaultDatasetId(element)) {
+			// IndustryFusion: CIM 009 4.5.5, "datasetId": "@none" names the default instance, which has no
+			// datasetId; JsonLdApi drops it from the expanded instance
+			return;
+		}
 		if (dataSetId.indexOf(':') == -1) {
 			throw new ResponseException(ErrorType.BadRequestData, "datasetId must be a URI");
 		}

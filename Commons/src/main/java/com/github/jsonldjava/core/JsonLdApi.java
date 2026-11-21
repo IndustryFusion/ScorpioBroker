@@ -1963,6 +1963,14 @@ public class JsonLdApi {
 				if (expandedValue == null) {
 					continue;
 				}
+				// IndustryFusion: CIM 009 4.5.5, "datasetId": "@none" supplied for an Attribute instance makes it
+				// the default instance, which has no datasetId; dropping it here lets every operation treat the
+				// instance as the default one
+				if (NGSIConstants.NGSI_LD_DATA_SET_ID.equals(expandedProperty) && isEntityWritePayload(payloadType)
+						&& !ngsiElement.isFromHasValue() && !ngsiElement.isHasAtValue()
+						&& NGSIObject.isDefaultDatasetId(expandedValue)) {
+					continue;
+				}
 				// 7.9)
 				if (JsonLdConsts.LIST.equals(activeCtx.getContainer(key))) {
 					if (!(expandedValue instanceof Map)
@@ -2119,6 +2127,27 @@ public class JsonLdApi {
 			ngsiElement.setScalar(true);
 			ngsiElement.validate(payloadType, activeProperty, expandedProperty, this);
 			return ngsiElement;
+		}
+	}
+
+	/**
+	 * IndustryFusion: the payloads that write Attribute instances of an entity, in
+	 * which "datasetId": "@none" names the default instance (CIM 009 4.5.5). In
+	 * subscriptions and queries "@none" is a filter for the default instance and
+	 * stays.
+	 */
+	static boolean isEntityWritePayload(int payloadType) {
+		switch (payloadType) {
+			case AppConstants.ENTITY_CREATE_PAYLOAD:
+			case AppConstants.ENTITY_UPDATE_PAYLOAD:
+			case AppConstants.ENTITY_ATTRS_UPDATE_PAYLOAD:
+			case AppConstants.MERGE_PATCH_PAYLOAD:
+			case AppConstants.REPLACE_ENTITY_PAYLOAD:
+			case AppConstants.TEMP_ENTITY_CREATE_PAYLOAD:
+			case AppConstants.TEMP_ENTITY_UPDATE_PAYLOAD:
+				return true;
+			default:
+				return false;
 		}
 	}
 

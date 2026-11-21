@@ -1,0 +1,23 @@
+--
+-- Copyright (c) 2026 IndustryFusion Foundation
+--
+-- Licensed under the Apache License, Version 2.0 (the "License");
+-- you may not use this file except in compliance with the License.
+-- You may obtain a copy of the License at
+--
+--    http://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- See the License for the specific language governing permissions and
+-- limitations under the License.
+--
+
+-- IndustryFusion: change data capture (Debezium) publishes every change of an entity with the complete row
+-- before and after the change, and a delete with the deleted row (contracts/context-broker: Entity changes are
+-- published through the entity store). Postgres writes the complete old row to the WAL only with REPLICA
+-- IDENTITY FULL; the default writes just the primary key.
+-- Fork builds on 5.0.5 edited this statement into V20190604.1; as a migration of its own, V20190604.1 keeps
+-- upstream's checksum, and the statement is a no-op on a store that already has it.
+ALTER TABLE public.entity REPLICA IDENTITY FULL;

@@ -369,13 +369,7 @@ public class RegistrySubscriptionService implements CSourceHandler {
 							case "mqtts":
 								try {
 									toSend = getMqttClient(notificationParam).onItem().transformToUni(client -> {
-										int qos = 1;
-
-										String qosString = notificationParam.getEndPoint().getNotifierInfo()
-												.get(NGSIConstants.MQTT_QOS);
-										if (qosString != null) {
-											qos = Integer.parseInt(qosString);
-										}
+										int qos = SubscriptionTools.getMqttQos(notificationParam);
 										try {
 											return client
 													.publish(

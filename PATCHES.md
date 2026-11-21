@@ -17,6 +17,7 @@ has a unit test here. A patch that serves no requirement is dropped on the next 
 | Image `ibn40/scorpio-all-in-one-runner:<docker-tag>`; the Dockerfile sets no `DBHOST`, `BUSHOST`. From `45e40a4` | *The broker runs with the platform's configuration* (the image the chart starts) | `ImageNameTest` |
 | `"datasetId": "@none"` names the default Attribute instance wherever an entity is written (CIM 009 4.5.5); it answered `404` | *Default attribute instance* (accepted deviation A2) | `DefaultDatasetIdTest` (Commons and AllInOneRunner) |
 | A batch merge or batch update whose only entity is refused answers `207` with a BatchOperationResult (CIM 009 6.31.3.1, 6.16.3.1, 5.2.17); it answered `404` | *Refusals the platform relies on*, scenario *Null value in a batch of one* (accepted deviation A3) | `BatchRefusalTest` |
+| A subscription notifies over MQTT without `receiverInfo` (and without `notifierInfo`), both optional (CIM 009 5.2.15): no extra key, certificate or trust-all for the client, no `metadata` in the message (7.2). Opening the MQTT client to a host failed with a `NullPointerException` on the missing `receiverInfo`, so after a restart notifications were lost until a subscription with a `receiverInfo` had connected to the same host | *Subscriptions and notifications* (notify over MQTT) | `MqttNotificationTest` |
 
 Endpoints without a role check, as on 5.0.5: the at-context server (`/ngsi-ld/v1/jsonldContexts`), which the
 broker calls itself without a token, the entity maps (`/ngsi-ld/v1/entityMap`) and `/remotenotify`. The
@@ -49,7 +50,8 @@ all-in-one runner need Postgres with PostGIS and TLS, and Kafka, named by the va
 (`dbport`, `busport`, `POSTGRES_SERVICE` ...):
 
     mvn test -Dkafka -Pkafka -pl Commons,AllInOneRunner -am -Dsurefire.failIfNoSpecifiedTests=false \
-      -Dtest='DefaultDatasetIdTest,EndpointRolesTest,PlatformConfigurationTest,MigrationCopiesTest,AccessControlTest,EntityStoreReplicaIdentityTest,MergeValueObjectsTest,ImageNameTest,BatchRefusalTest'
+      -Dtest='DefaultDatasetIdTest,EndpointRolesTest,PlatformConfigurationTest,MigrationCopiesTest,AccessControlTest,EntityStoreReplicaIdentityTest,MergeValueObjectsTest,ImageNameTest,BatchRefusalTest,MqttNotificationTest'
 
+`MqttNotificationTest` needs neither: it runs the MQTT notification path against an MQTT server of its own.
 The runner listens on port 19190 in these tests (`-Daio.test.port` changes it), as it calls its own
 at-context server.

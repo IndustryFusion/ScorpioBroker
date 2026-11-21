@@ -436,6 +436,16 @@ public class SubscriptionTools {
 		return new MultiMap(result);
 	}
 
+	/**
+	 * The QoS of an MQTT notification from the notifierInfo of the endpoint, 1
+	 * without one. notifierInfo is optional (ETSI GS CIM 009 5.2.15).
+	 */
+	public static int getMqttQos(NotificationParam notificationParam) {
+		Map<String, String> notifierInfo = notificationParam.getEndPoint().getNotifierInfo();
+		String qosString = notifierInfo == null ? null : notifierInfo.get(NGSIConstants.MQTT_QOS);
+		return qosString == null ? 1 : Integer.parseInt(qosString);
+	}
+
 	public static String getMqttPayload(NotificationParam notificationParam, Map<String, Object> notification)
 			throws Exception {
 		Map<String, Object> result = Maps.newLinkedHashMap();

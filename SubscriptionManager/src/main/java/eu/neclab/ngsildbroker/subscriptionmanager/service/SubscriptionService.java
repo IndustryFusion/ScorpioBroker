@@ -1248,13 +1248,7 @@ public class SubscriptionService implements CSourceHandler, BaseRequestHandler {
 						case "mqtt", "mqtts" -> {
 							try {
 								toSend = getMqttClient(notificationParam).onItem().transformToUni(client -> {
-									int qos = 1;
-
-									String qosString = notificationParam.getEndPoint().getNotifierInfo()
-											.get(NGSIConstants.MQTT_QOS);
-									if (qosString != null) {
-										qos = Integer.parseInt(qosString);
-									}
+									int qos = SubscriptionTools.getMqttQos(notificationParam);
 									try {
 										return client
 												.publish(
@@ -1431,7 +1425,11 @@ public class SubscriptionService implements CSourceHandler, BaseRequestHandler {
 			if (host.getScheme().equals(AppConstants.PROTOCOL_MQTTS)) {
 				options.setSsl(true);
 			}
+			// receiverInfo is optional (CIM 009 5.2.15): without one no key, cert or trust-all
 			Map<String, Collection<String>> recieverInfo = notificationParam.getEndPoint().getReceiverInfoMap();
+			if (recieverInfo == null) {
+				recieverInfo = Map.of();
+			}
 			PemKeyCertOptions certOptions = null;
 			if (recieverInfo.containsKey(AppConstants.SSL_KEY)) {
 				certOptions = new PemKeyCertOptions();

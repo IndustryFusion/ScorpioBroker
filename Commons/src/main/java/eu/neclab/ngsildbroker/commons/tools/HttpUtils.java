@@ -997,7 +997,7 @@ public final class HttpUtils {
 			wasUpdated = wasUpdated && r.isWasUpdated();
 		}
 		if (isHavingError && !isHavingSuccess) {
-			result.remove("success");
+			// IndustryFusion: success stays, empty: it has cardinality 1 in a BatchOperationResult (CIM 009 5.2.16)
 			ResponseBuilder<Object> builder;
 			if (sameError) {
 				if (lastErrorCode == 415 || (lastErrorCode == 400

@@ -414,6 +414,7 @@ public class QueryController {
 	@Counted(name = "entity_map_create_total", description = "Total number of entitymap create requests", absolute = true)
 	@Timed(name = "entity_map_create_duration", description = "Duration of entitymap create requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "entity_map_create_concurrent", description = "Number of concurrent entitymap create requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> queryEntityMap(HttpServerRequest request, @QueryParam("id") String id,
 			@QueryParam("type") String typeQuery, @QueryParam("idPattern") String idPattern,
 			@QueryParam("attrs") String attrs, @QueryParam("q") String qInput, @QueryParam("csf") String csf,
@@ -462,6 +463,7 @@ public class QueryController {
 	@Counted(name = "entity_map_retrieve_total", description = "Total number of entitymap retrieve requests", absolute = true)
 	@Timed(name = "entity_map_retrieve_duration", description = "Duration of entitymap retrieve requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "entity_map_retrieve_concurrent", description = "Number of concurrent entitymap retrieve requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> getEntityMap(HttpServerRequest request,
 			@PathParam("entityMapId") String entityMapId) {
 		logger.debug("getEntityMap");
@@ -477,6 +479,7 @@ public class QueryController {
 	@Counted(name = "entity_map_delete_total", description = "Total number of entitymap delete requests", absolute = true)
 	@Timed(name = "entity_map_delete_duration", description = "Duration of entitymap delete requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "entity_map_delete_concurrent", description = "Number of concurrent entitymap delete requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> deleteEntityMap(HttpServerRequest request,
 			@PathParam("entityMapId") String entityMapId) {
 		logger.debug("deleteEntityMap");
@@ -492,6 +495,7 @@ public class QueryController {
 	@Counted(name = "entity_map_patch_total", description = "Total number of entitymap patch requests", absolute = true)
 	@Timed(name = "entity_map_patch_duration", description = "Duration of entitymap patch requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "entity_map_patch_concurrent", description = "Number of concurrent entitymap patch requests", absolute = true)
+	@RolesAllowed({"Factory-Admin", "Factory-Reader", "Factory-Editor"})
 	public Uni<RestResponse<Object>> updateEntityMap(HttpServerRequest request, String bodyStr,
 			@PathParam("entityMapId") String entityMapId) {
 		logger.debug("updateEntityMap");

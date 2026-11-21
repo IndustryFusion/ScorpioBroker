@@ -52,7 +52,10 @@ public class EndpointRolesTest {
 	private static final Set<String> SUB_WRITE = Set.of("Factory-Admin", "Subscriber");
 	private static final Set<String> SUB_READ = Set.of("Factory-Admin", "Factory-Reader");
 	private static final Set<String> SUB_READ_ONE = Set.of("Factory-Admin", "Factory-Reader", "Subscriber");
-	/** Endpoints without a role check: internal calls of the broker and federation, as in the fork on 5.0.5 */
+	/**
+	 * Endpoints without a role check: the at-context server's reads, createcache and createimplicitly, which the
+	 * broker calls itself without a token, and /remotenotify of federation
+	 */
 	private static final Set<String> OPEN = Set.of();
 
 	private static final Map<String, Map<String, Set<String>>> EXPECTED = new TreeMap<>();
@@ -69,8 +72,8 @@ public class EndpointRolesTest {
 				Map.of("postQuery", READ));
 		put("eu.neclab.ngsildbroker.queryhandler.controller.QueryController",
 				Map.of("getEntity", READ, "query", READ, "getAllTypes", READ, "getType", READ, "getAllAttributes",
-						READ, "getAttribute", READ, "queryEntityMap", OPEN, "getEntityMap", OPEN, "deleteEntityMap",
-						OPEN, "updateEntityMap", OPEN));
+						READ, "getAttribute", READ, "queryEntityMap", READ, "getEntityMap", READ, "deleteEntityMap",
+						READ, "updateEntityMap", READ));
 		put("eu.neclab.ngsildbroker.registryhandler.controller.RegistryController", Map.of("queryCSource", REG_READ,
 				"registerCSource", ADMIN, "getCSourceById", REG_READ, "updateCSource", ADMIN, "deleteCSource", ADMIN));
 		put("eu.neclab.ngsildbroker.registry.subscriptionmanager.controller.RegistrySubscriptionController",
@@ -90,7 +93,7 @@ public class EndpointRolesTest {
 				Map.of("postQuery", READ));
 		put("eu.neclab.ngsildbroker.infomanager.controller.InfoController", Map.of("getSourceIdentity", READ));
 		put("eu.neclab.ngsildbroker.atcontextserver.controller.ContextController",
-				Map.of("getContextById", OPEN, "getContexts", OPEN, "createContext", OPEN, "deleteContextById", OPEN,
+				Map.of("getContextById", OPEN, "getContexts", OPEN, "createContext", ADMIN, "deleteContextById", ADMIN,
 						"loadCache", OPEN, "createImplicitly", OPEN));
 	}
 
@@ -161,7 +164,13 @@ public class EndpointRolesTest {
 		assertTrue(Set.of(ra.value()).contains("Factory-Reader"));
 	}
 
-	/** Factory-Reader is never allowed a write */
+	/**
+	 * An entity map is the result of a query (CIM 009 5.2.39): whoever may query may also delete or patch it, so its
+	 * DELETE and PATCH have the read roles
+	 */
+	private static final Set<String> QUERY_RESULT = Set.of("deleteEntityMap", "updateEntityMap");
+
+	/** Factory-Reader is never allowed a write, other than on the result of its own query */
 	@Test
 	public void readerOnlyReads() throws Exception {
 		for (String cls : EXPECTED.keySet()) {
@@ -169,7 +178,8 @@ public class EndpointRolesTest {
 				RolesAllowed ra = m.getAnnotation(RolesAllowed.class);
 				if (ra != null && Set.of(ra.value()).contains("Factory-Reader")) {
 					boolean read = m.isAnnotationPresent(GET.class)
-							|| (m.isAnnotationPresent(POST.class) && m.getName().equals("postQuery"));
+							|| (m.isAnnotationPresent(POST.class) && m.getName().equals("postQuery"))
+							|| QUERY_RESULT.contains(m.getName());
 					assertTrue(read, m + " lets Factory-Reader write");
 				}
 			}

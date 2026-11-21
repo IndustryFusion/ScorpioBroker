@@ -101,6 +101,19 @@ public class PlatformConfigurationTest {
 		assertEquals("owner2", config(env).getValue("quarkus.datasource.username", String.class));
 	}
 
+	/**
+	 * The history managers record no entity change unless SCORPIO_HISTORY_AUTORECORDING asks for it: the platform
+	 * does not use the temporal API (contracts/context-broker: What the platform doesn't rely on), and recording
+	 * every change grows the temporal tables without bound
+	 */
+	@Test
+	public void noHistoryRecordingByDefault() throws IOException {
+		assertEquals(false, config(chart()).getValue("scorpio.history.autorecording", Boolean.class));
+		Map<String, String> env = chart();
+		env.put("SCORPIO_HISTORY_AUTORECORDING", "true");
+		assertEquals(true, config(env).getValue("scorpio.history.autorecording", Boolean.class));
+	}
+
 	/** Upstream's variable names keep working where the platform's are not set */
 	@Test
 	public void upstreamVariables() throws IOException {

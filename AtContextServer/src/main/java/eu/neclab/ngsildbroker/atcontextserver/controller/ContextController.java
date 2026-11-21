@@ -23,6 +23,7 @@ import org.jboss.resteasy.reactive.RestResponse.ResponseBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -101,6 +102,8 @@ public class ContextController {
 	@Counted(name = "context_create_total", description = "Total number of context create requests", absolute = true)
 	@Timed(name = "context_create_duration", description = "Duration of context create requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "context_create_concurrent", description = "Number of concurrent context create requests", absolute = true)
+	// no caller in the broker: only createcache and createimplicitly are called without a token
+	@RolesAllowed("Factory-Admin")
 	public Uni<RestResponse<Object>> createContext(String body) {
 
 		Map<String, Object> context;
@@ -127,6 +130,8 @@ public class ContextController {
 	@Counted(name = "context_delete_total", description = "Total number of context delete requests", absolute = true)
 	@Timed(name = "context_delete_duration", description = "Duration of context delete requests", unit = MetricUnits.MILLISECONDS, absolute = true)
 	@ConcurrentGauge(name = "context_delete_concurrent", description = "Number of concurrent context delete requests", absolute = true)
+	// no caller in the broker: only createcache and createimplicitly are called without a token
+	@RolesAllowed("Factory-Admin")
 	public Uni<RestResponse<Object>> deleteContextById(@PathParam("contextId") String id,
 			@QueryParam("reload") String reloadS) {
 		boolean reload;

@@ -56,7 +56,7 @@ public class BatchRefusalTest {
 	private static void refusedAlone(String operation) {
 		String id = create();
 		admin().body(nullValue(id)).post("/ngsi-ld/v1/entityOperations/" + operation).then().statusCode(207)
-				.body("errors", hasSize(1)).body("errors[0].entityId", equalTo(id))
+				.body("success", hasSize(0)).body("errors", hasSize(1)).body("errors[0].entityId", equalTo(id))
 				.body("errors[0].error.type", endsWith("/errors/BadRequestData"));
 		admin().get("/ngsi-ld/v1/entities/" + id).then().statusCode(200).body("a.value", equalTo(1));
 	}
@@ -88,7 +88,7 @@ public class BatchRefusalTest {
 	public void missingEntity() {
 		String id = "urn:test:refusal:missing:" + UUID.randomUUID();
 		admin().body("[{\"id\":\"" + id + "\",\"a\":{\"type\":\"Property\",\"value\":2}}]")
-				.post("/ngsi-ld/v1/entityOperations/merge").then().statusCode(207)
+				.post("/ngsi-ld/v1/entityOperations/merge").then().statusCode(207).body("success", hasSize(0))
 				.body("errors[0].entityId", equalTo(id)).body("errors[0].error.type", endsWith("/ResourceNotFound"));
 	}
 }

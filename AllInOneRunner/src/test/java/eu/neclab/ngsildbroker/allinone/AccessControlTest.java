@@ -15,6 +15,7 @@
  */
 package eu.neclab.ngsildbroker.allinone;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 
@@ -94,6 +95,43 @@ public class AccessControlTest {
 	@Test
 	public void adminAsRealmRole() {
 		adminLifecycle(PlatformProfile.realmRoles("Factory-Admin"));
+	}
+
+	/** The entity maps answer a query: without a token 401, the read roles may use them */
+	@Test
+	public void entityMapsNeedAToken() {
+		as(null).get("/ngsi-ld/v1/entityMap?type=AccessTest").then().statusCode(401);
+		as(null).get("/ngsi-ld/v1/entityMap/urn:test:ac:map").then().statusCode(401);
+		as(null).delete("/ngsi-ld/v1/entityMap/urn:test:ac:map").then().statusCode(401);
+		as(null).body("{}").patch("/ngsi-ld/v1/entityMap/urn:test:ac:map").then().statusCode(401);
+		as(PlatformProfile.clientRoles("offline_access")).get("/ngsi-ld/v1/entityMap?type=AccessTest").then()
+				.statusCode(403);
+		allowed(as(PlatformProfile.clientRoles("Factory-Reader")).get("/ngsi-ld/v1/entityMap?type=AccessTest"));
+	}
+
+	/**
+	 * Hosting and deleting an @context needs Factory-Admin; the reads, createcache and createimplicitly stay open,
+	 * the broker calls them without a token
+	 */
+	@Test
+	public void contextsHostedByTheAdmin() {
+		String context = "{\"@context\":{\"ac\":\"https://example.org/ac/\"}}";
+		as(null).body(context).post("/ngsi-ld/v1/jsonldContexts/").then().statusCode(401);
+		as(PlatformProfile.clientRoles("Factory-Reader")).body(context).post("/ngsi-ld/v1/jsonldContexts/").then()
+				.statusCode(403);
+		as(null).delete("/ngsi-ld/v1/jsonldContexts/urn:test:ac:context").then().statusCode(401);
+		String admin = PlatformProfile.clientRoles("Factory-Admin");
+		String location = as(admin).body(context).post("/ngsi-ld/v1/jsonldContexts/").then().statusCode(201)
+				.extract().header("Location");
+		String id = location.substring(location.lastIndexOf('/') + 1);
+		allowed(as(null).get("/ngsi-ld/v1/jsonldContexts/" + id));
+		allowed(as(admin).delete("/ngsi-ld/v1/jsonldContexts/" + id));
+		allowed(as(null).body(context).post("/ngsi-ld/v1/jsonldContexts/createimplicitly/"));
+	}
+
+	private static void allowed(io.restassured.response.Response response) {
+		int status = response.statusCode();
+		assertTrue(status != 401 && status != 403, "refused with " + status + ": " + response.asString());
 	}
 
 	/** T7: a subscription is readable by its id (CIM 009 6.11.3.1) */

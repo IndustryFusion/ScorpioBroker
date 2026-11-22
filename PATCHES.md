@@ -19,6 +19,7 @@ has a unit test here. A patch that serves no requirement is dropped on the next 
 | `"datasetId": "@none"` names the default Attribute instance wherever an entity is written (CIM 009 4.5.5); it answered `404` | *Default attribute instance* (accepted deviation A2) | `DefaultDatasetIdTest` (Commons and AllInOneRunner) |
 | A batch merge or batch update whose only entity is refused answers `207` with a BatchOperationResult (CIM 009 6.31.3.1, 6.16.3.1, 5.2.17); it answered `404`. A batch whose entities are all refused keeps `"success": []`, cardinality 1 in a BatchOperationResult (CIM 009 5.2.16); it was left out | *Refusals the platform relies on*, scenario *Null value in a batch of one* (accepted deviation A3) | `BatchRefusalTest` |
 | A subscription notifies over MQTT without `receiverInfo` (and without `notifierInfo`), both optional (CIM 009 5.2.15): no extra key, certificate or trust-all for the client, no `metadata` in the message (7.2). Opening the MQTT client to a host failed with a `NullPointerException` on the missing `receiverInfo`, so after a restart notifications were lost until a subscription with a `receiverInfo` had connected to the same host | *Subscriptions and notifications* (notify over MQTT) | `MqttNotificationTest` |
+| An Attribute instance's datasetIds are its own (CIM 009 4.5.5): a sub-attribute is an attribute of its own (4.5.2, 4.5.3) whose instances are validated against their own datasetIds. Expansion added a sub-attribute's datasetIds (or its default instance) to the instance that holds it, so an instance with a `datasetId` and a sub-attribute written as an array, or a sub-attribute instance with a `datasetId` of its own, was refused with `400` "Duplicated datasetId or multiple entries with no datasetId found". Two default instances of one attribute, or of one sub-attribute, are still refused | *Value forms the broker stores* (sub-attributes; accepted deviation A5) | `SubAttributeDatasetIdTest` (Commons and AllInOneRunner) |
 
 Endpoints without a role check:
 
@@ -56,7 +57,7 @@ all-in-one runner need Postgres with PostGIS and TLS, and Kafka, named by the va
 (`dbport`, `busport`, `POSTGRES_SERVICE` ...):
 
     mvn test -Dkafka -Pkafka -pl Commons,AllInOneRunner -am -Dsurefire.failIfNoSpecifiedTests=false \
-      -Dtest='DefaultDatasetIdTest,EndpointRolesTest,PlatformConfigurationTest,MigrationCopiesTest,AccessControlTest,EntityStoreReplicaIdentityTest,MergeValueObjectsTest,ImageNameTest,BatchRefusalTest,MqttNotificationTest'
+      -Dtest='DefaultDatasetIdTest,EndpointRolesTest,PlatformConfigurationTest,MigrationCopiesTest,AccessControlTest,EntityStoreReplicaIdentityTest,MergeValueObjectsTest,ImageNameTest,BatchRefusalTest,SubAttributeDatasetIdTest,MqttNotificationTest'
 
 `MqttNotificationTest` needs neither: it runs the MQTT notification path against an MQTT server of its own.
 The runner listens on port 19190 in these tests (`-Daio.test.port` changes it), as it calls its own

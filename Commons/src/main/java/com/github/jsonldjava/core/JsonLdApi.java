@@ -1955,7 +1955,13 @@ public class JsonLdApi {
 							new NGSIObject(value, ngsiElement)
 									.setFromHasValue(ngsiElement.isHasAtValue() || ngsiElement.isFromHasValue()),
 							payloadType, atContextAllowed);
-					ngsiElement.getDatasetIds().addAll(ngsiExpandedValue.getDatasetIds());
+					// IndustryFusion: CIM 009 4.5.5, an Attribute instance takes its datasetId from its own
+					// datasetId member only; a sub-attribute is an attribute of its own (4.5.2) whose instances
+					// are validated against their own datasetIds, so its datasetIds must not count for the
+					// instance that holds it
+					if (NGSIConstants.NGSI_LD_DATA_SET_ID.equals(expandedProperty)) {
+						ngsiElement.getDatasetIds().addAll(ngsiExpandedValue.getDatasetIds());
+					}
 					expandedValue = ngsiExpandedValue.getElement();
 
 				}
